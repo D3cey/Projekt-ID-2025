@@ -1,3 +1,4 @@
+-- pavlo.sql
 CREATE TABLE stacje
 (
     id    SERIAL PRIMARY KEY,
@@ -45,6 +46,7 @@ ALTER TABLE trasa
     ADD FOREIGN KEY (id, poczatkowa_stacja_id)
         REFERENCES stacje_na_trasie (trasa_id, stacja1_id);
 
+-- blazej.sql
 CREATE TABLE lokomotywy
 (
     id   SERIAL PRIMARY KEY,
@@ -99,6 +101,7 @@ CREATE TABLE sklad_pociagu
     UNIQUE (pociag_id, miejsce_w_pociagu)
 );
 
+-- kuba.sql
 CREATE TABLE klient
 (
     id       SERIAL PRIMARY KEY,
