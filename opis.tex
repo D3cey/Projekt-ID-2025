@@ -1,1 +1,83 @@
+\documentclass[11pt, a4paper]{article}
+
+
+\usepackage[T1]{fontenc} 
+\usepackage[utf8]{inputenc} 
+\usepackage{polski} 
+\usepackage{geometry} 
+\usepackage{graphicx} 
+\usepackage{hyperref} 
+\usepackage{listings} 
+\usepackage{amsmath} 
+\usepackage{amssymb} 
+
+
+\geometry{
+    a4paper,
+    left=2.5cm,
+    right=2.5cm,
+    top=2.5cm,
+    bottom=2.5cm
+}
+
+
+\lstset{
+    language=SQL,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    tabsize=4,
+    captionpos=b
+}
+
+
+\title{Projekt Bazy Danych: System Zarządzania Koleją}
+\author{Jakub Durczyński, Błażej Szeląg, Pavlo Tsikalyshyn} 
+\date{Kwiecień 2025} 
+
+
+\begin{document}
+
+\maketitle
+
+\section{Tematyka i cele projektu}
+
+Projekt dotyczy systemu bazodanowego do zarządzania transportem kolejowym. Celem jest stworzenie bazy danych przechowującej informacje o stacjach, torach, trasach, pociągach (wraz z ich składem i typami), klientach, biletach, rezerwacjach miejsc oraz rozkładach jazdy. System powinien zapewniać spójność danych i umożliwiać efektywne zarządzanie operacjami kolejowymi.
+
+\section{Opis schematu bazy danych}
+
+Schemat bazy danych modeluje kluczowe elementy systemu kolejowego. Główne grupy tabel obejmują:
+\begin{itemize}
+	\item \textbf{Infrastruktura:} Tabele \texttt{stacje}, \texttt{tory}, \texttt{polaczenia\_miedzy\_stacjami} opisują fizyczną infrastrukturę kolejową.
+	\item \textbf{Trasy i Rozkład:} Tabele \texttt{trasa}, \texttt{stacje\_na\_trasie}, \texttt{rozklad\_jazdy}, \texttt{odcinek} definiują logiczne trasy, ich realizację w czasie oraz powiązanie z pociągami.
+	\item \textbf{Pojazdy kolejowe:} Tabele \texttt{lokomotywy}, \texttt{typy\_pociagow}, \texttt{pociagi}, \texttt{typy\_wagonu}, \texttt{wagony}, \texttt{sklad\_pociagu}, \texttt{miejsce} zarządzają informacjami o pojazdach kolejowych, ich typach, składach i dostępnych miejscach.
+	\item \textbf{Klienci i Bilety:} Tabele \texttt{klient}, \texttt{znizka}, \texttt{bilet}, \texttt{wykupione\_miejsca} obsługują dane klientów, dostępne zniżki, sprzedane bilety oraz rezerwacje konkretnych miejsc na dane odcinki.
+\end{itemize}
+
+\section{Napotkane problemy i rozwiązania}
+
+Podczas projektowania napotkano następujące wyzwania:
+\begin{itemize}
+	\item Efektywne modelowanie złożonych relacji między trasami, rozkładami jazdy i fizycznymi odcinkami pokonywanymi przez pociągi.
+	\item Zapewnienie unikalności rezerwacji miejsc na poszczególnych odcinkach podróży.
+	\item Wyszukiwanie połączeń między stacjami: Zaprojektowanie mechanizmu wyszukiwania podróży między dwoma stacjami, które nie muszą mieć bezpośredniego połączenia. Wymaga to implementacji algorytmu przeszukiwania grafu, np. algorytmu Dijkstry, do znalezienia optymalnej trasy (np. najkrótszej lub najszybszej) z uwzględnieniem możliwych przesiadek.
+\end{itemize}
+Rozwiązanie tych problemów wymagało odpowiedniego zaprojektowania relacji oraz kluczy głównych i obcych.
+Implementacja systemu wyszukiwania połączeń i optymalnej trasy, zaplanowane jest na dalszą część projektu.
+
+\section{Planowane dalsze prace}
+
+W kolejnych etapach planowane jest dodanie:
+\begin{itemize}
+	\item \textbf{Indeksów} w celu optymalizacji zapytań.
+	\item \textbf{Perspektyw} dla uproszczenia dostępu do złożonych danych (np. rozkład dla stacji, dostępne miejsca).
+	\item \textbf{Funkcji} do np. kalkulacji ceny biletu, wyszukiwania połączeń z wykorzystaniem algorytmu Dijkstry.
+	\item \textbf{Wyzwalaczy} do automatyzacji zadań i utrzymania spójności (np. aktualizacja statusu pociągu, kontrola liczby miejsc).
+\end{itemize}
+
+\end{document}
 
