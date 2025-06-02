@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import org.example.model.NastepnaStacjaWrapper?> <VBox xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.DodajTraseDialogController"
+                                                   spacing="15.0" style="-fx-padding: 20;" prefWidth="450.0"> <children>
+    <Label text="Dodaj Nową Trasę">
+        <font>
+            <Font name="System Bold" size="18.0" />
+        </font>
+    </Label>
+
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="150.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" /> </columnConstraints>
+        <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+        <children>
+            <Label text="Pierwsza stacja:" GridPane.rowIndex="0" />
+            <ComboBox fx:id="comboPierwszaStacja" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="Wybierz stację początkową"/>
+
+            <Label text="Następna stacja:" GridPane.rowIndex="1" />
+            <ComboBox fx:id="comboNastepnaStacja" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="Wybierz kolejną stację" disable="true"/>
+        </children>
+    </GridPane>
+
+    <Button fx:id="btnDodajOdcinek" text="Dodaj Odcinek do Trasy" onAction="#handleDodajOdcinek" disable="true" maxWidth="Infinity"/>
+
+    <Label text="Aktualna trasa:" style="-fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+    <ListView fx:id="listaOdcinkowTrasy" prefHeight="100.0"/>
+
+    <Label fx:id="lblStatusTrasy" textAlignment="CENTER" wrapText="true" minHeight="30.0"/> <HBox alignment="CENTER_RIGHT" spacing="10.0" style="-fx-padding: 10 0 0 0;">
+    <children>
+        <Button fx:id="btnZapiszTrase" text="Zakończ i Zapisz Trasę" onAction="#handleZapiszTrase" disable="true" prefWidth="180.0"/>
+        <Button fx:id="btnAnuluj" text="Anuluj" onAction="#handleAnuluj" prefWidth="100.0"/>
+    </children>
+</HBox>
+</children>
+</VBox>

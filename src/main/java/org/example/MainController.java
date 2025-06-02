@@ -27,17 +27,25 @@ import java.util.List;
 
 
 public class MainController {
-    @FXML private Pane mapContainer;
+    @FXML
+    private Pane mapContainer;
 
-    @FXML private Button btnShowAddStationDialog;
-    @FXML private Button btnShowAddConnectionDialog;
-    @FXML private Button btnShowFindRouteDialog;
-    @FXML private Button btnShowDeleteStationDialog; // New FXML field for the dialog trigger
+    @FXML
+    private Button btnShowAddStationDialog;
+    @FXML
+    private Button btnShowAddConnectionDialog;
+    @FXML
+    private Button btnShowFindRouteDialog;
+    @FXML
+    private Button btnShowDeleteStationDialog; // New FXML field for the dialog trigge
+    @FXML
+    private Button btnShowAddTrasaDialog; // Nowe pole FXMLr
 
     // Removed: @FXML private ComboBox<Stacja> comboDeleteStation;
     // Removed: @FXML private Button           btnRemoveStation;
 
-    @FXML private Label lblStatus;
+    @FXML
+    private Label lblStatus;
 
     private MapView mapView;
     private final List<Marker> allMarkers = new ArrayList<>();
@@ -71,6 +79,48 @@ public class MainController {
         btnShowAddConnectionDialog.setOnAction(e -> showAddConnectionDialog());
         btnShowFindRouteDialog.setOnAction(e -> showFindRouteDialog());
         btnShowDeleteStationDialog.setOnAction(e -> showDeleteStationDialog()); // Set action
+        btnShowAddTrasaDialog.setOnAction(e -> showDodajTraseDialog()); // Ustawienie akcji
+    }
+
+    private void showDodajTraseDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/DodajTraseDialog.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Dodaj Nową Trasę");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            Stage ownerStage = (Stage) mapContainer.getScene().getWindow();
+            dialogStage.initOwner(ownerStage);
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            DodajTraseDialogController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setWszystkieStacje(Stacja.pobierzWszystkie()); // Przekaż listę stacji
+
+            dialogStage.showAndWait(); // Pokaż dialog i czekaj
+
+            if (controller.isTrasaDodana()) {
+                lblStatus.setText("Nowa trasa została pomyślnie dodana.");
+                lblStatus.setTextFill(Color.GREEN);
+                // Tutaj możesz dodać odświeżenie jakiejś listy tras, jeśli taką wyświetlasz
+                // Ponieważ PolaczeniePociagowe.pobierzWszystkie() jest wołane na żądanie
+                // przy szukaniu trasy, nie ma potrzeby natychmiastowego odświeżania globalnej listy.
+            } else {
+                // lblStatus.setText("Dodawanie trasy anulowane lub nieudane.");
+                // lblStatus.setTextFill(Color.ORANGE);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            lblStatus.setText("Błąd otwierania dialogu dodawania trasy: " + e.getMessage());
+            lblStatus.setTextFill(Color.RED);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            lblStatus.setText("Błąd inicjalizacji dialogu dodawania trasy. Sprawdź FXML/kontroler.");
+            lblStatus.setTextFill(Color.RED);
+        }
     }
 
     private void showDeleteStationDialog() {
@@ -130,6 +180,10 @@ public class MainController {
                 Marker m = Marker.createProvided(Marker.Provided.BLUE)
                         .setPosition(coord(s))
                         .setVisible(true);
+
+                mapView.addMarker(m);
+                allMarkers.add(m);
+
                 m.attachLabel(new MapLabel(s.getNazwa(), 10, -10)
                         .setCssClass("map-label-station")
                         .setVisible(true));
@@ -161,7 +215,10 @@ public class MainController {
                 lblStatus.setText("New station added successfully.");
                 lblStatus.setTextFill(Color.GREEN);
             }
-        } catch (Exception e) { e.printStackTrace(); lblStatus.setText("Error: " + e.getMessage());}
+        } catch (Exception e) {
+            e.printStackTrace();
+            lblStatus.setText("Error: " + e.getMessage());
+        }
     }
 
     private void showAddConnectionDialog() {
@@ -182,7 +239,10 @@ public class MainController {
                 lblStatus.setText("New connection added successfully.");
                 lblStatus.setTextFill(Color.GREEN);
             }
-        } catch (Exception e) { e.printStackTrace(); lblStatus.setText("Error: " + e.getMessage());}
+        } catch (Exception e) {
+            e.printStackTrace();
+            lblStatus.setText("Error: " + e.getMessage());
+        }
     }
 
     private void showFindRouteDialog() {
@@ -206,7 +266,10 @@ public class MainController {
                 lblStatus.setText("Route finding cancelled or stations not selected.");
                 lblStatus.setTextFill(Color.ORANGE);
             }
-        } catch (Exception e) { e.printStackTrace(); lblStatus.setText("Error: " + e.getMessage());}
+        } catch (Exception e) {
+            e.printStackTrace();
+            lblStatus.setText("Error: " + e.getMessage());
+        }
     }
 
     private void findAndDisplayRoute(Stacja stacjaA, Stacja stacjaB) {
