@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.Pane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/19.0.2.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.MainController">
+
+    <top>
+        <HBox spacing="10" BorderPane.alignment="CENTER">
+            <ComboBox fx:id="comboStacjaA" promptText="Stacja A"/>
+            <ComboBox fx:id="comboStacjaB" promptText="Stacja B"/>
+            <Button  fx:id="btnZnajdz" text="Znajdź połączenie"/>
+        </HBox>
+    </top>
+
+    <!--  WAŻNE: prefWidth / prefHeight > 0  -->
+    <center>
+        <Pane fx:id="mapContainer" prefWidth="800" prefHeight="600"/>
+    </center>
+</BorderPane>
