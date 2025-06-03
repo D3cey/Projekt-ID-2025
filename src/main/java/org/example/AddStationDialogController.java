@@ -10,12 +10,18 @@ import org.example.model.Stacja;
 
 public class AddStationDialogController {
 
-    @FXML private TextField txtName;
-    @FXML private TextField txtLat;
-    @FXML private TextField txtLon;
-    @FXML private Label lblStatus;
-    @FXML private Button btnAdd;
-    @FXML private Button btnCancel;
+    @FXML
+    private TextField txtName;
+    @FXML
+    private TextField txtLat;
+    @FXML
+    private TextField txtLon;
+    @FXML
+    private Label lblStatus;
+    @FXML
+    private Button btnAdd;
+    @FXML
+    private Button btnCancel;
 
     private Stage dialogStage;
     private boolean stationAdded = false;
@@ -34,10 +40,10 @@ public class AddStationDialogController {
         String latStr = txtLat.getText().trim();
         String lonStr = txtLon.getText().trim();
 
-        lblStatus.setText(""); // Clear previous status
+        lblStatus.setText("");
 
         if (name.isEmpty() || latStr.isEmpty() || lonStr.isEmpty()) {
-            lblStatus.setText("All fields are required.");
+            lblStatus.setText("Wszystkie pola są wymagane.");
             lblStatus.setTextFill(Color.RED);
             return;
         }
@@ -47,12 +53,12 @@ public class AddStationDialogController {
             latitude = Double.parseDouble(latStr);
             longitude = Double.parseDouble(lonStr);
             if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-                lblStatus.setText("Invalid latitude/longitude values.");
+                lblStatus.setText("Nieprawidłowe wartości szerokości/długości geograficznej.");
                 lblStatus.setTextFill(Color.RED);
                 return;
             }
         } catch (NumberFormatException ex) {
-            lblStatus.setText("Latitude and Longitude must be numbers.");
+            lblStatus.setText("Szerokość i długość geograficzna muszą być liczbami.");
             lblStatus.setTextFill(Color.RED);
             return;
         }
@@ -61,13 +67,11 @@ public class AddStationDialogController {
 
         if (success) {
             stationAdded = true;
-            lblStatus.setText("Station added successfully!");
+            lblStatus.setText("Stacja dodana pomyślnie!");
             lblStatus.setTextFill(Color.GREEN);
-            // Optionally disable add button or close dialog immediately
-            // For now, user clicks cancel or adds another.
-            // dialogStage.close(); // uncomment to close immediately on success
+            // dialogStage.close();
         } else {
-            lblStatus.setText("Failed to add station. Coordinates might exist or DB error.");
+            lblStatus.setText("Nie udało się dodać stacji. Współrzędne mogą już istnieć lub wystąpił błąd bazy danych.");
             lblStatus.setTextFill(Color.RED);
         }
     }

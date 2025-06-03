@@ -1,7 +1,7 @@
-// src/main/java/org/example/model/Polaczenie.java
 package org.example.model;
 
 import org.example.DbUtil;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,24 +10,34 @@ public class Polaczenie {
     private final int id;
     private final int stacja1Id;
     private final int stacja2Id;
-    private final double odleglosc; // Dodane pole
+    private final double odleglosc;
 
-    public Polaczenie(int id, int stacja1Id, int stacja2Id, double odleglosc) { // Zaktualizowany konstruktor
+    public Polaczenie(int id, int stacja1Id, int stacja2Id, double odleglosc) {
         this.id = id;
         this.stacja1Id = stacja1Id;
         this.stacja2Id = stacja2Id;
         this.odleglosc = odleglosc;
     }
 
-    // Getters
-    public int getId() { return id; }
-    public int getStacja1Id() { return stacja1Id; }
-    public int getStacja2Id() { return stacja2Id; }
-    public double getOdleglosc() { return odleglosc; } // Nowy getter
+    public int getId() {
+        return id;
+    }
+
+    public int getStacja1Id() {
+        return stacja1Id;
+    }
+
+    public int getStacja2Id() {
+        return stacja2Id;
+    }
+
+    public double getOdleglosc() {
+        return odleglosc;
+    }
 
     public static List<Polaczenie> pobierzWszystkie() {
         List<Polaczenie> lista = new ArrayList<>();
-        // Zaktualizowane zapytanie SQL, aby pobierać również 'odleglosc'
+
         String sql = "SELECT id, stacja1_id, stacja2_id, odleglosc FROM polaczenia_miedzy_stacjami";
 
         try (Connection conn = DbUtil.getConnection();
@@ -39,7 +49,7 @@ public class Polaczenie {
                         rs.getInt("id"),
                         rs.getInt("stacja1_id"),
                         rs.getInt("stacja2_id"),
-                        rs.getDouble("odleglosc") // Dodane pobieranie odległości
+                        rs.getDouble("odleglosc")
                 ));
             }
         } catch (SQLException e) {
@@ -50,7 +60,7 @@ public class Polaczenie {
     }
 
     public static Polaczenie znajdzBezposrednie(int stacjaAId, int stacjaBId) {
-        List<Polaczenie> wszystkie = pobierzWszystkie(); // Pobiera wszystkie, w tym odległości
+        List<Polaczenie> wszystkie = pobierzWszystkie();
         for (Polaczenie p : wszystkie) {
             if ((p.getStacja1Id() == stacjaAId && p.getStacja2Id() == stacjaBId) ||
                     (p.getStacja1Id() == stacjaBId && p.getStacja2Id() == stacjaAId)) {
@@ -59,7 +69,7 @@ public class Polaczenie {
         }
         return null;
     }
-    // dodajPolaczenie() pozostaje bez zmian
+
     public static boolean dodajPolaczenie(int stacja1Id, int stacja2Id, double odleglosc) {
         String sql = "INSERT INTO polaczenia_miedzy_stacjami (stacja1_id, stacja2_id, odleglosc) VALUES (?, ?, ?)";
         try (Connection conn = DbUtil.getConnection();

@@ -13,11 +13,16 @@ import java.util.List;
 
 public class FindRouteDialogController {
 
-    @FXML private ComboBox<Stacja> comboDialogStacjaA;
-    @FXML private ComboBox<Stacja> comboDialogStacjaB;
-    @FXML private Label lblDialogStatus;
-    @FXML private Button btnDialogFind;
-    @FXML private Button btnDialogCancel;
+    @FXML
+    private ComboBox<Stacja> comboDialogStacjaA;
+    @FXML
+    private ComboBox<Stacja> comboDialogStacjaB;
+    @FXML
+    private Label lblDialogStatus;
+    @FXML
+    private Button btnDialogFind;
+    @FXML
+    private Button btnDialogCancel;
 
     private Stage dialogStage;
     private Stacja selectedStacjaA = null;
@@ -45,16 +50,16 @@ public class FindRouteDialogController {
         Stacja stacjaA = comboDialogStacjaA.getValue();
         Stacja stacjaB = comboDialogStacjaB.getValue();
 
-        lblDialogStatus.setText(""); // Clear previous status
+        lblDialogStatus.setText("");
 
         if (stacjaA == null || stacjaB == null) {
-            lblDialogStatus.setText("Please select both stations.");
+            lblDialogStatus.setText("Proszę wybrać obie stacje.");
             lblDialogStatus.setTextFill(Color.RED);
             return;
         }
 
         if (stacjaA.getId() == stacjaB.getId()) {
-            lblDialogStatus.setText("Start and end stations must be different.");
+            lblDialogStatus.setText("Stacja początkowa i końcowa muszą być różne.");
             lblDialogStatus.setTextFill(Color.RED);
             return;
         }

@@ -1,6 +1,7 @@
 package org.example.model;
 
 import org.example.DbUtil;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,23 +10,36 @@ import java.util.Objects;
 public class Stacja {
     private int id;
     private String nazwa;
-    private double latitude;
-    private double longitude;
+    private double szerokoscGeograficzna;
+    private double dlugoscGeograficzna;
 
-    public Stacja(int id, String nazwa, double latitude, double longitude) {
+    public Stacja(int id, String nazwa, double szerokoscGeograficzna, double dlugoscGeograficzna) {
         this.id = id;
         this.nazwa = nazwa;
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.szerokoscGeograficzna = szerokoscGeograficzna;
+        this.dlugoscGeograficzna = dlugoscGeograficzna;
     }
 
-    public int getId() { return id; }
-    public String getNazwa() { return nazwa; }
-    public double getLatitude() { return latitude; }
-    public double getLongitude() { return longitude; }
+    public int getId() {
+        return id;
+    }
+
+    public String getNazwa() {
+        return nazwa;
+    }
+
+    public double getSzerokoscGeograficzna() {
+        return szerokoscGeograficzna;
+    }
+
+    public double getDlugoscGeograficzna() {
+        return dlugoscGeograficzna;
+    }
 
     @Override
-    public String toString() { return nazwa; }
+    public String toString() {
+        return nazwa;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -36,45 +50,69 @@ public class Stacja {
     }
 
     @Override
-    public int hashCode() { return Objects.hash(id); }
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 
+    /**
+     * Pobiera wszystkie stacje z bazy danych.
+     *
+     * @return Lista obiektów Stacja.
+     */
     public static List<Stacja> pobierzWszystkie() {
-        List<Stacja> lista = new ArrayList<>();
-        String sql = "SELECT id, nazwa, szerokosc AS latitude, dlugosc AS longitude FROM stacje ORDER BY nazwa";
+        List<Stacja> listaStacji = new ArrayList<>(); // Zmieniono nazwę zmiennej
+        String sql = "SELECT id, nazwa, szerokosc AS szerokoscGeograficzna, dlugosc AS dlugoscGeograficzna FROM stacje ORDER BY nazwa";
         try (Connection conn = DbUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                lista.add(new Stacja(
+                listaStacji.add(new Stacja(
                         rs.getInt("id"),
                         rs.getString("nazwa"),
-                        rs.getDouble("latitude"),
-                        rs.getDouble("longitude")
+                        rs.getDouble("szerokoscGeograficzna"),
+                        rs.getDouble("dlugoscGeograficzna")
                 ));
             }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return lista;
+        } catch (SQLException e) {
+            System.err.println("Wystąpił błąd podczas pobierania stacji: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return listaStacji;
     }
 
-    public static boolean dodajStacje(String nazwa, double latitude, double longitude) {
+    /**
+     * Dodaje nową stację do bazy danych.
+     *
+     * @param nazwa                 Nazwa stacji.
+     * @param szerokoscGeograficzna Szerokość geograficzna stacji.
+     * @param dlugoscGeograficzna   Długość geograficzna stacji.
+     * @return true jeśli stacja została dodana pomyślnie, false w przeciwnym razie.
+     */
+    public static boolean dodajStacje(String nazwa, double szerokoscGeograficzna, double dlugoscGeograficzna) {
         String sql = "INSERT INTO stacje (nazwa, szerokosc, dlugosc) VALUES (?, ?, ?)";
         try (Connection conn = DbUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, nazwa);
-            pstmt.setDouble(2, latitude);
-            pstmt.setDouble(3, longitude);
+            pstmt.setDouble(2, szerokoscGeograficzna);
+            pstmt.setDouble(3, dlugoscGeograficzna);
             int affectedRows = pstmt.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            System.err.println("Error adding station: " + e.getMessage());
+            System.err.println("Błąd podczas dodawania stacji: " + e.getMessage());
             if ("23505".equals(e.getSQLState())) {
-                System.err.println("A station with these coordinates already exists or other unique constraint violated.");
+                System.err.println("Stacja o podanych współrzędnych już istnieje lub naruszono inny unikalny indeks.");
             }
             e.printStackTrace();
             return false;
         }
     }
 
+    /**
+     * Usuwa stację z bazy danych na podstawie jej ID.
+     *
+     * @param stacjaId ID stacji do usunięcia.
+     * @return true jeśli stacja została usunięta pomyślnie, false w przeciwnym razie.
+     */
     public static boolean usunStacje(int stacjaId) {
         String sql = "DELETE FROM stacje WHERE id = ?";
         try (Connection conn = DbUtil.getConnection();
@@ -86,7 +124,7 @@ public class Stacja {
             System.err.println("Błąd podczas usuwania stacji (ID: " + stacjaId + "): " + e.getMessage());
             if ("23503".equals(e.getSQLState())) {
                 System.err.println("Nie można usunąć stacji (ID: " + stacjaId +
-                        "): Stacja wykorzystywana jest w innych miejscach.");
+                        "): Stacja wykorzystywana jest w innych miejscach (np. w innych tabelach).");
             }
             e.printStackTrace();
             return false;

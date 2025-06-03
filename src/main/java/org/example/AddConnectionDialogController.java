@@ -15,12 +15,18 @@ import java.util.List;
 
 public class AddConnectionDialogController {
 
-    @FXML private ComboBox<Stacja> comboStacja1;
-    @FXML private ComboBox<Stacja> comboStacja2;
-    @FXML private TextField txtDistance;
-    @FXML private Label lblStatus;
-    @FXML private Button btnAdd;
-    @FXML private Button btnCancel;
+    @FXML
+    private ComboBox<Stacja> comboStacja1;
+    @FXML
+    private ComboBox<Stacja> comboStacja2;
+    @FXML
+    private TextField txtDistance;
+    @FXML
+    private Label lblStatus;
+    @FXML
+    private Button btnAdd;
+    @FXML
+    private Button btnCancel;
 
     private Stage dialogStage;
     private boolean connectionAdded = false;
@@ -42,49 +48,49 @@ public class AddConnectionDialogController {
     private void handleAdd() {
         Stacja stacja1 = comboStacja1.getValue();
         Stacja stacja2 = comboStacja2.getValue();
-        String distStr = txtDistance.getText().trim();
+        String strOdleglosc = txtDistance.getText().trim();
 
-        lblStatus.setText(""); // Clear previous status
+        lblStatus.setText("");
 
         if (stacja1 == null || stacja2 == null) {
-            lblStatus.setText("Please select both stations.");
+            lblStatus.setText("Proszę wybrać obie stacje.");
             lblStatus.setTextFill(Color.RED);
             return;
         }
         if (stacja1.getId() == stacja2.getId()) {
-            lblStatus.setText("Stations must be different.");
+            lblStatus.setText("Stacje muszą być różne.");
             lblStatus.setTextFill(Color.RED);
             return;
         }
-        if (distStr.isEmpty()) {
-            lblStatus.setText("Please enter the distance.");
+        if (strOdleglosc.isEmpty()) {
+            lblStatus.setText("Proszę wprowadzić odległość.");
             lblStatus.setTextFill(Color.RED);
             return;
         }
 
-        double distance;
+        double odleglosc;
         try {
-            distance = Double.parseDouble(distStr);
-            if (distance <= 0) {
-                lblStatus.setText("Distance must be a positive value.");
+            odleglosc = Double.parseDouble(strOdleglosc);
+            if (odleglosc <= 0) {
+                lblStatus.setText("Odległość musi być wartością dodatnią.");
                 lblStatus.setTextFill(Color.RED);
                 return;
             }
         } catch (NumberFormatException ex) {
-            lblStatus.setText("Distance must be a valid number.");
+            lblStatus.setText("Odległość musi być poprawną liczbą.");
             lblStatus.setTextFill(Color.RED);
             return;
         }
 
-        boolean success = Polaczenie.dodajPolaczenie(stacja1.getId(), stacja2.getId(), distance);
+        boolean sukces = Polaczenie.dodajPolaczenie(stacja1.getId(), stacja2.getId(), odleglosc);
 
-        if (success) {
+        if (sukces) {
             connectionAdded = true;
-            lblStatus.setText("Connection added successfully!");
+            lblStatus.setText("Połączenie dodane pomyślnie!");
             lblStatus.setTextFill(Color.GREEN);
-            // dialogStage.close(); // uncomment to close immediately
+            // scenaDialogowa.close();
         } else {
-            lblStatus.setText("Failed to add connection. Check logs.");
+            lblStatus.setText("Nie udało się dodać połączenia. Sprawdź logi.");
             lblStatus.setTextFill(Color.RED);
         }
     }

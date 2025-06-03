@@ -16,10 +16,14 @@ import java.util.Optional;
 
 public class DeleteStationDialogController {
 
-    @FXML private ComboBox<Stacja> comboSelectStationToDelete;
-    @FXML private Label lblDeleteStatus;
-    @FXML private Button btnDelete;
-    @FXML private Button btnCancel;
+    @FXML
+    private ComboBox<Stacja> comboSelectStationToDelete;
+    @FXML
+    private Label lblDeleteStatus;
+    @FXML
+    private Button btnDelete;
+    @FXML
+    private Button btnCancel;
 
     private Stage dialogStage;
     private boolean stationDeleted = false;
@@ -39,43 +43,40 @@ public class DeleteStationDialogController {
     @FXML
     private void handleDeleteConfirm() {
         Stacja stationToRemove = comboSelectStationToDelete.getValue();
-        lblDeleteStatus.setText(""); // Clear previous status
+        lblDeleteStatus.setText("");
 
         if (stationToRemove == null) {
-            lblDeleteStatus.setText("Please select a station to remove.");
+            lblDeleteStatus.setText("Proszę wybrać stację do usunięcia.");
             lblDeleteStatus.setTextFill(Color.RED);
             return;
         }
 
-        // Confirmation Alert within the dialog
         Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmationAlert.initOwner(dialogStage); // Make it modal to this dialog
-        confirmationAlert.setTitle("Confirm Deletion");
-        confirmationAlert.setHeaderText("Delete Station: " + stationToRemove.getNazwa());
-        confirmationAlert.setContentText("Are you sure you want to permanently delete this station?\n" +
-                "This might fail if the station is part of existing connections or routes.");
+        confirmationAlert.initOwner(dialogStage);
+        confirmationAlert.setTitle("Potwierdź Usunięcie");
+        confirmationAlert.setHeaderText("Usunąć stację: " + stationToRemove.getNazwa());
+        confirmationAlert.setContentText("Czy na pewno chcesz trwale usunąć tę stację?\n" +
+                "Operacja może się nie powieść, jeśli stacja jest częścią istniejących połączeń lub tras.");
 
         Optional<ButtonType> result = confirmationAlert.showAndWait();
 
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            // User confirmed deletion in the alert
             boolean success = Stacja.usunStacje(stationToRemove.getId());
 
             if (success) {
                 stationDeleted = true;
-                lblDeleteStatus.setText("Station '" + stationToRemove.getNazwa() + "' removed successfully.");
+                lblDeleteStatus.setText("Stacja '" + stationToRemove.getNazwa() + "' została pomyślnie usunięta.");
                 lblDeleteStatus.setTextFill(Color.GREEN);
-                // Close the dialog after successful deletion and confirmation
+
                 if (dialogStage != null) {
                     dialogStage.close();
                 }
             } else {
-                lblDeleteStatus.setText("Failed to remove station. It might be in use. Check console logs.");
+                lblDeleteStatus.setText("Nie udało się usunąć stacji. Może być w użyciu. Sprawdź logi konsoli.");
                 lblDeleteStatus.setTextFill(Color.RED);
             }
         } else {
-            // User cancelled in the alert
-            lblDeleteStatus.setText("Station removal cancelled.");
+            lblDeleteStatus.setText("Anulowano usuwanie stacji.");
             lblDeleteStatus.setTextFill(Color.ORANGE);
         }
     }

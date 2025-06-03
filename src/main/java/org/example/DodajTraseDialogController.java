@@ -119,10 +119,11 @@ public class DodajTraseDialogController {
             lblStatusTrasy.setText("Brak kierunkowych połączeń wychodzących z: " + ostatniaStacjaNaTrasie.getNazwa());
         } else if (!brakNastepnych) {
             lblStatusTrasy.setText("Wybierz następną stację z listy (połączenia kierunkowe).");
-        } else if (aktualnieBudowanaTrasaStacje.isEmpty()){ // Jeśli jeszcze nie wybrano pierwszej stacji
+        } else if (aktualnieBudowanaTrasaStacje.isEmpty()) {
             lblStatusTrasy.setText("Wybierz stację początkową.");
         }
     }
+
     private Stacja znajdzStacjePoId(int id) {
         if (wszystkieStacjeList == null) return null;
         return wszystkieStacjeList.stream().filter(s -> s.getId() == id).findFirst().orElse(null);
@@ -194,7 +195,7 @@ public class DodajTraseDialogController {
 
         String sqlWykonanyPrzezJdbc = String.format("{? = call %s(?, ?)}", nazwaFunkcji);
         String sqlDoWyswietlenia = String.format(
-                        "SELECT %s(stacja_poczatkowa_id_param := %d, polaczenia_ids_param := %s);\n",
+                "SELECT %s(stacja_poczatkowa_id_param := %d, polaczenia_ids_param := %s);\n",
                 nazwaFunkcji,
                 idPoczatkowejStacji,
                 polaczeniaArrayForLog

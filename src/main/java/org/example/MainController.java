@@ -5,12 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-// Removed Alert and ButtonType, as the confirmation is now inside DeleteStationDialogController
-// However, Alert and ButtonType are still used by DeleteStationDialogController itself.
 import javafx.scene.control.Button;
-// Removed ComboBox import if no other ComboBox is directly managed by MainController for general selection
-// import javafx.scene.control.ComboBox; // Keep if other ComboBoxes like comboDeleteStation existed here.
-// Actually, we still need it for the method signature of byId if it's generic, but not for FXML fields.
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -23,7 +18,6 @@ import org.example.model.Stacja;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-// Removed Optional, as MainController no longer directly handles the Alert result for delete.
 
 
 public class MainController {
@@ -37,13 +31,9 @@ public class MainController {
     @FXML
     private Button btnShowFindRouteDialog;
     @FXML
-    private Button btnShowDeleteStationDialog; // New FXML field for the dialog trigge
+    private Button btnShowDeleteStationDialog;
     @FXML
-    private Button btnShowAddTrasaDialog; // Nowe pole FXMLr
-
-    // Removed: @FXML private ComboBox<Stacja> comboDeleteStation;
-    // Removed: @FXML private Button           btnRemoveStation;
-
+    private Button btnShowAddTrasaDialog;
     @FXML
     private Label lblStatus;
 
@@ -63,14 +53,12 @@ public class MainController {
         mapView.prefHeightProperty().bind(mapContainer.heightProperty());
         mapContainer.getChildren().add(mapView);
 
-        // No need to populate comboDeleteStation here anymore
-
         mapView.initializedProperty().addListener((obs, oldReady, ready) -> {
             if (ready) {
                 mapView.setMapType(MapType.OSM);
-                mapView.setCenter(new Coordinate(52.2297, 21.0118));
+                mapView.setCenter(new Coordinate(52.2297, 21.0118)); // Centrum na Warszawę
                 mapView.setZoom(6);
-                refreshStationData(); // Now only updates map markers
+                refreshStationData();
                 loadConnections();
             }
         });
@@ -78,8 +66,8 @@ public class MainController {
         btnShowAddStationDialog.setOnAction(e -> showAddStationDialog());
         btnShowAddConnectionDialog.setOnAction(e -> showAddConnectionDialog());
         btnShowFindRouteDialog.setOnAction(e -> showFindRouteDialog());
-        btnShowDeleteStationDialog.setOnAction(e -> showDeleteStationDialog()); // Set action
-        btnShowAddTrasaDialog.setOnAction(e -> showDodajTraseDialog()); // Ustawienie akcji
+        btnShowDeleteStationDialog.setOnAction(e -> showDeleteStationDialog());
+        btnShowAddTrasaDialog.setOnAction(e -> showDodajTraseDialog());
     }
 
     private void showDodajTraseDialog() {
@@ -97,16 +85,13 @@ public class MainController {
 
             DodajTraseDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setWszystkieStacje(Stacja.pobierzWszystkie()); // Przekaż listę stacji
+            controller.setWszystkieStacje(Stacja.pobierzWszystkie());
 
-            dialogStage.showAndWait(); // Pokaż dialog i czekaj
+            dialogStage.showAndWait();
 
             if (controller.isTrasaDodana()) {
                 lblStatus.setText("Nowa trasa została pomyślnie dodana.");
                 lblStatus.setTextFill(Color.GREEN);
-                // Tutaj możesz dodać odświeżenie jakiejś listy tras, jeśli taką wyświetlasz
-                // Ponieważ PolaczeniePociagowe.pobierzWszystkie() jest wołane na żądanie
-                // przy szukaniu trasy, nie ma potrzeby natychmiastowego odświeżania globalnej listy.
             } else {
                 // lblStatus.setText("Dodawanie trasy anulowane lub nieudane.");
                 // lblStatus.setTextFill(Color.ORANGE);
@@ -118,7 +103,7 @@ public class MainController {
             lblStatus.setTextFill(Color.RED);
         } catch (NullPointerException e) {
             e.printStackTrace();
-            lblStatus.setText("Błąd inicjalizacji dialogu dodawania trasy. Sprawdź FXML/kontroler.");
+            lblStatus.setText("Błąd inicjalizacji dialogu dodawania trasy. Sprawdź plik FXML lub kontroler.");
             lblStatus.setTextFill(Color.RED);
         }
     }
@@ -129,7 +114,7 @@ public class MainController {
             Parent page = loader.load();
 
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("Remove Station");
+            dialogStage.setTitle("Usuń Stację");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             Stage ownerStage = (Stage) mapContainer.getScene().getWindow();
             dialogStage.initOwner(ownerStage);
@@ -138,40 +123,34 @@ public class MainController {
 
             DeleteStationDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setStations(Stacja.pobierzWszystkie()); // Pass current stations
+            controller.setStations(Stacja.pobierzWszystkie());
 
-            dialogStage.showAndWait(); // Show dialog and wait for it to close
+            dialogStage.showAndWait();
 
             if (controller.isStationDeleted()) {
-                refreshStationData(); // Update map markers
-                loadConnections();    // Update connection lines
-                lblStatus.setText("Station removed successfully.");
+                refreshStationData();
+                loadConnections();
+                lblStatus.setText("Stacja usunięta pomyślnie.");
                 lblStatus.setTextFill(Color.GREEN);
             } else {
-                // Optional: display a message if cancelled, or just do nothing
-                // lblStatus.setText("Station removal cancelled or failed within dialog.");
+                // lblStatus.setText("Usuwanie stacji anulowane lub nieudane w dialogu.");
                 // lblStatus.setTextFill(Color.ORANGE);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
-            lblStatus.setText("Error opening remove station dialog: " + e.getMessage());
+            lblStatus.setText("Błąd otwierania dialogu usuwania stacji: " + e.getMessage());
             lblStatus.setTextFill(Color.RED);
         } catch (NullPointerException e) {
-            e.printStackTrace(); // Catch if mapContainer.getScene() is null early on
-            lblStatus.setText("Error setting up remove station dialog. Main window not ready?");
+            e.printStackTrace();
+            lblStatus.setText("Błąd konfiguracji dialogu usuwania stacji. Czy główne okno jest gotowe?");
             lblStatus.setTextFill(Color.RED);
         }
     }
 
-    // Removed handleRemoveStation() method, its logic is now within DeleteStationDialogController
-
     public void refreshStationData() {
         List<Stacja> stacje = Stacja.pobierzWszystkie();
 
-        // No longer need to update comboDeleteStation here
-
-        // Update map markers
         if (mapView != null && mapView.getInitialized()) {
             allMarkers.forEach(mapView::removeMarker);
             allMarkers.clear();
@@ -187,23 +166,18 @@ public class MainController {
                 m.attachLabel(new MapLabel(s.getNazwa(), 10, -10)
                         .setCssClass("map-label-station")
                         .setVisible(true));
-                mapView.addMarker(m);
-                allMarkers.add(m);
+                // mapView.addMarker(m);
+                // allMarkers.add(m);
             }
         }
     }
 
-    // showAddStationDialog, showAddConnectionDialog, showFindRouteDialog,
-    // findAndDisplayRoute, loadConnections, coord, byId methods remain as previously defined.
-    // Make sure they are complete from previous steps.
-
-    // --- Ensure these methods are present and complete from previous steps ---
     private void showAddStationDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AddStationDialog.fxml"));
             Parent page = loader.load();
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("Add New Station");
+            dialogStage.setTitle("Dodaj Nową Stację");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner((Stage) mapContainer.getScene().getWindow());
             dialogStage.setScene(new Scene(page));
@@ -212,12 +186,13 @@ public class MainController {
             dialogStage.showAndWait();
             if (controller.isStationAdded()) {
                 refreshStationData();
-                lblStatus.setText("New station added successfully.");
+                lblStatus.setText("Nowa stacja dodana pomyślnie.");
                 lblStatus.setTextFill(Color.GREEN);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            lblStatus.setText("Error: " + e.getMessage());
+            lblStatus.setText("Błąd: " + e.getMessage());
+            lblStatus.setTextFill(Color.RED);
         }
     }
 
@@ -226,7 +201,7 @@ public class MainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AddConnectionDialog.fxml"));
             Parent page = loader.load();
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("Add New Connection");
+            dialogStage.setTitle("Dodaj Nowe Połączenie");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner((Stage) mapContainer.getScene().getWindow());
             dialogStage.setScene(new Scene(page));
@@ -236,12 +211,13 @@ public class MainController {
             dialogStage.showAndWait();
             if (controller.isConnectionAdded()) {
                 loadConnections();
-                lblStatus.setText("New connection added successfully.");
+                lblStatus.setText("Nowe połączenie dodane pomyślnie.");
                 lblStatus.setTextFill(Color.GREEN);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            lblStatus.setText("Error: " + e.getMessage());
+            lblStatus.setText("Błąd: " + e.getMessage());
+            lblStatus.setTextFill(Color.RED);
         }
     }
 
@@ -250,7 +226,7 @@ public class MainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/FindRouteDialog.fxml"));
             Parent page = loader.load();
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("Find Route");
+            dialogStage.setTitle("Znajdź Trasę");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner((Stage) mapContainer.getScene().getWindow());
             dialogStage.setScene(new Scene(page));
@@ -263,18 +239,19 @@ public class MainController {
             if (fromStation != null && toStation != null) {
                 findAndDisplayRoute(fromStation, toStation);
             } else {
-                lblStatus.setText("Route finding cancelled or stations not selected.");
+                lblStatus.setText("Wyszukiwanie trasy anulowane lub stacje nie zostały wybrane.");
                 lblStatus.setTextFill(Color.ORANGE);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            lblStatus.setText("Error: " + e.getMessage());
+            lblStatus.setText("Błąd: " + e.getMessage());
+            lblStatus.setTextFill(Color.RED);
         }
     }
 
     private void findAndDisplayRoute(Stacja stacjaA, Stacja stacjaB) {
         if (stacjaA == null || stacjaB == null) {
-            lblStatus.setText("Stations for route finding are not properly selected.");
+            lblStatus.setText("Stacje dla wyszukiwania trasy nie są poprawnie wybrane.");
             lblStatus.setTextFill(Color.RED);
             return;
         }
@@ -305,21 +282,21 @@ public class MainController {
                     }
                 }
                 mapView.setCenter(new Coordinate(
-                        (stacjaA.getLatitude() + stacjaB.getLatitude()) / 2.0,
-                        (stacjaA.getLongitude() + stacjaB.getLongitude()) / 2.0));
+                        (stacjaA.getSzerokoscGeograficzna() + stacjaB.getSzerokoscGeograficzna()) / 2.0,
+                        (stacjaA.getDlugoscGeograficzna() + stacjaB.getDlugoscGeograficzna()) / 2.0));
                 routeFoundOnMap = true;
-                lblStatus.setText("Route displayed: " + stacjaA.getNazwa() + " -> " + stacjaB.getNazwa());
+                lblStatus.setText("Wyświetlono trasę: " + stacjaA.getNazwa() + " -> " + stacjaB.getNazwa());
                 lblStatus.setTextFill(Color.GREEN);
                 break;
             }
         }
         if (!routeFoundOnMap) {
-            lblStatus.setText("No direct train route segment: " + stacjaA.getNazwa() + " -> " + stacjaB.getNazwa());
+            lblStatus.setText("Brak bezpośredniego odcinka trasy kolejowej: " + stacjaA.getNazwa() + " -> " + stacjaB.getNazwa());
             lblStatus.setTextFill(Color.ORANGE);
         }
     }
 
-    private void loadConnections() {
+    void loadConnections() {
         if (mapView != null && mapView.getInitialized()) {
             allLines.forEach(mapView::removeCoordinateLine);
             allLines.clear();
@@ -338,7 +315,7 @@ public class MainController {
     }
 
     private static Coordinate coord(Stacja s) {
-        return new Coordinate(s.getLatitude(), s.getLongitude());
+        return new Coordinate(s.getSzerokoscGeograficzna(), s.getDlugoscGeograficzna());
     }
 
     private static Stacja byId(List<Stacja> list, int id) {
