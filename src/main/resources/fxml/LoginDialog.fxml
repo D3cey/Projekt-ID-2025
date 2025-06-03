@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.RowConstraints?>
+<VBox xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controllers.LoginDialogController"
+      alignment="CENTER" spacing="20.0" style="-fx-padding: 30;">
+    <children>
+        <Label text="Logowanie do Systemu">
+            <font>
+                <Font name="System Bold" size="20.0" />
+            </font>
+        </Label>
+        <GridPane hgap="10.0" vgap="15.0" alignment="CENTER">
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <children>
+                <Label text="Login:" GridPane.rowIndex="0" />
+                <TextField fx:id="txtLogin" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="Wpisz login"/>
+                <Label text="Hasło:" GridPane.rowIndex="1" />
+                <PasswordField fx:id="txtPassword" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="Wpisz hasło"/>
+            </children>
+        </GridPane>
+        <Label fx:id="lblLoginStatus" textAlignment="CENTER" wrapText="true" minHeight="20.0" style="-fx-text-fill: red;"/>
+        <HBox alignment="CENTER" spacing="10.0">
+            <children>
+                <Button fx:id="btnLogin" mnemonicParsing="false" onAction="#handleLoginButtonAction" prefWidth="100.0" text="Zaloguj" defaultButton="true"/>
+                <Button fx:id="btnCancelLogin" mnemonicParsing="false" onAction="#handleCancelLoginButtonAction" prefWidth="100.0" text="Anuluj" cancelButton="true"/>
+            </children>
+        </HBox>
+    </children>
+</VBox>

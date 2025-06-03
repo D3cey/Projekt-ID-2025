@@ -1,4 +1,4 @@
-package org.example;
+package org.example.controllers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,14 +11,13 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.example.model.Polaczenie;
 import org.example.model.Stacja;
-import org.example.DbUtil;
+import org.example.util.DbUtil;
 
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 

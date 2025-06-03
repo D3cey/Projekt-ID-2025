@@ -1,6 +1,6 @@
 package org.example.model;
 
-import org.example.DbUtil;
+import org.example.util.DbUtil;
 
 import java.sql.*;
 import java.util.ArrayList;

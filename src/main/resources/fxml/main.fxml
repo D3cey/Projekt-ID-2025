@@ -11,7 +11,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/19.0.2.1"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.MainController">
+            fx:controller="org.example.controllers.MainController">
 
     <top>
         <HBox spacing="10" BorderPane.alignment="CENTER" style="-fx-padding: 10;" alignment="CENTER_LEFT">
@@ -30,14 +30,16 @@
             </padding>
             <Label text="Akcje" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
             <Button fx:id="btnShowFindRouteDialog" text="Znajdź trasę..." maxWidth="Infinity"/>
-            <Separator style="-fx-padding: 10 0 0 0;"/>
-            <Label text="Zarządzaj danymi" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 5 0 0 0;"/>
-            <Button fx:id="btnShowAddStationDialog" text="Dodaj nową stację..." maxWidth="Infinity"/>
-            <Button fx:id="btnShowAddConnectionDialog" text="Dodaj nowe połączenie..." maxWidth="Infinity"/>
-            <Button fx:id="btnShowAddTrasaDialog" text="Dodaj Nową Trasę..." maxWidth="Infinity"/>
-            <Button fx:id="btnShowDeleteStationDialog" text="Usuń stację..." maxWidth="Infinity"
-                    style="-fx-text-fill: red;"/>
-
+            <VBox fx:id="adminControlsPane" spacing="8" alignment="TOP_CENTER" managed="false" visible="false">
+                <Separator style="-fx-padding: 10 0 0 0;"/>
+                <Label text="Zarządzaj Danymi (Admin)"
+                       style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 5 0 0 0;"/>
+                <Button fx:id="btnShowAddStationDialog" text="Dodaj Nową Stację..." maxWidth="Infinity"/>
+                <Button fx:id="btnShowAddConnectionDialog" text="Dodaj Nowe Połączenie..." maxWidth="Infinity"/>
+                <Button fx:id="btnShowAddTrasaDialog" text="Dodaj Nową Trasę..." maxWidth="Infinity"/>
+                <Button fx:id="btnShowDeleteStationDialog" text="Usuń Stację..." maxWidth="Infinity"
+                        style="-fx-text-fill: red;"/>
+            </VBox>
             <Label fx:id="lblStatus" wrapText="true" style="-fx-padding: 10 0 0 0;"/>
         </VBox>
 

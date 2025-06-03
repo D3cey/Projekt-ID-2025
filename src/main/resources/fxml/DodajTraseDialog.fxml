@@ -12,7 +12,7 @@
 <?import javafx.scene.text.Font?>
 
 <VBox xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="org.example.DodajTraseDialogController"
+      fx:controller="org.example.controllers.DodajTraseDialogController"
       spacing="15.0" style="-fx-padding: 20;" prefWidth="450.0">
     <Label text="Dodaj Nową Trasę">
         <font>
