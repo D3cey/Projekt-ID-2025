@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 import org.example.model.Polaczenie;
 import org.example.model.PolaczeniePociagowe;
 import org.example.model.Stacja;
+import org.example.model.Trasa;
 import org.example.util.CurrentUserSession; // Upewnij się, że ta klasa i pakiet są poprawne
 
 import java.io.IOException;
@@ -35,6 +36,8 @@ public class MainController {
     private Button btnShowDeleteStationDialog;
     @FXML
     private Button btnShowAddTrasaDialog;
+    @FXML
+    private Button btnShowEditTrasaDialog;
 
     @FXML
     private VBox adminControlsPane;
@@ -73,7 +76,7 @@ public class MainController {
         if (btnShowFindRouteDialog != null) btnShowFindRouteDialog.setOnAction(e -> showFindRouteDialog());
         if (btnShowDeleteStationDialog != null) btnShowDeleteStationDialog.setOnAction(e -> showDeleteStationDialog());
         if (btnShowAddTrasaDialog != null) btnShowAddTrasaDialog.setOnAction(e -> showDodajTraseDialog());
-
+        if (btnShowEditTrasaDialog != null) btnShowEditTrasaDialog.setOnAction(e -> showEdytujTraseDialog());
 
         if (CurrentUserSession.isLoggedIn()) {
             boolean isAdmin = CurrentUserSession.isAdmin();
@@ -121,6 +124,35 @@ public class MainController {
                 mapView.addMarker(m);
                 allMarkers.add(m);
             }
+        }
+    }
+
+    private void showEdytujTraseDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EdytujTraseDialog.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Edycja Postojów na Trasie");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner((Stage) mapContainer.getScene().getWindow());
+            dialogStage.setScene(new Scene(page));
+
+            EdytujTraseDialogController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setTrasy(Trasa.pobierzWszystkie()); // Przekaż listę tras do dialogu
+
+            dialogStage.showAndWait();
+
+            // Po zamknięciu dialogu nie ma potrzeby wykonywać dodatkowych akcji odświeżających w MainController,
+            // ponieważ zmiany dotyczą danych, które nie są bezpośrednio wyświetlane w głównym oknie.
+            // Zmiany będą widoczne przy następnym wyszukiwaniu trasy lub w innych funkcjach,
+            // które będą odczytywać te dane.
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            lblStatus.setText("Błąd otwierania dialogu edycji trasy: " + e.getMessage());
+            lblStatus.setTextFill(Color.RED);
         }
     }
 

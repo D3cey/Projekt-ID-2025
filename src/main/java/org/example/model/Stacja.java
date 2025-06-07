@@ -130,4 +130,99 @@ public class Stacja {
             return false;
         }
     }
+
+    /**
+     * Pobiera listę stacji dla określonej trasy, włącznie ze statusem postoju.
+     *
+     * @param trasaId ID trasy do sprawdzenia.
+     * @return Lista obiektów StacjaNaTrasieWrapper.
+     */
+    public static List<StacjaNaTrasieWrapper> pobierzStacjeDlaTrasy(int trasaId) {
+        List<StacjaNaTrasieWrapper> stacjeNaTrasie = new ArrayList<>();
+        // Zapytanie łączące stacje_na_trasie ze stacjami, aby uzyskać pełne dane
+        String sql = "SELECT s.id, s.nazwa, s.szerokosc, s.dlugosc, s.miasto, snt.zatrumujesia " +
+                "FROM stacje_na_trasie snt " +
+                "JOIN stacje s ON snt.stacja1_id = s.id " +
+                "WHERE snt.trasa_id = ? " +
+                "ORDER BY snt.stacja1_id"; // Sortowanie jest ważne, jeśli kolejność ma znaczenie
+
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, trasaId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Stacja stacja = new Stacja(
+                        rs.getInt("id"),
+                        rs.getString("nazwa"),
+                        rs.getDouble("szerokosc"),
+                        rs.getDouble("dlugosc")
+                        // rs.getInt("miasto") // Jeśli potrzebujesz
+                );
+                stacjeNaTrasie.add(new StacjaNaTrasieWrapper(
+                        stacja,
+                        trasaId,
+                        rs.getBoolean("zatrumujesia")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("Błąd podczas pobierania stacji dla trasy " + trasaId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return stacjeNaTrasie;
+    }
+
+    /**
+     * Aktualizuje status postoju dla danej stacji na danej trasie.
+     *
+     * @param trasaId       ID trasy.
+     * @param stacjaId      ID stacji (w tabeli stacje_na_trasie jest to stacja1_id).
+     * @param zatrzymujeSie Nowy status postoju (true/false).
+     * @return true jeśli aktualizacja się powiodła, false w przeciwnym razie.
+     */
+    public static boolean zaktualizujStatusZatrzymania(int trasaId, int stacjaId, boolean zatrzymujeSie) {
+        String sql = "UPDATE stacje_na_trasie SET zatrumujesia = ? WHERE trasa_id = ? AND stacja1_id = ?";
+
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setBoolean(1, zatrzymujeSie);
+            pstmt.setInt(2, trasaId);
+            pstmt.setInt(3, stacjaId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Błąd podczas aktualizacji statusu postoju: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Dodaje pojedynczy segment do trasy w ramach istniejącej transakcji.
+     *
+     * @param conn                       Połączenie bazodanowe zarządzane przez kontroler.
+     * @param trasaId                    ID trasy.
+     * @param stacja1Id                  ID stacji początkowej segmentu.
+     * @param stacja2Id                  ID stacji końcowej segmentu.
+     * @param polaczeniaMiedzyStacjamiId ID połączenia między stacjami.
+     * @param zatrzymujeSie              Czy pociąg zatrzymuje się na stacji początkowej tego segmentu.
+     * @return true jeśli operacja się powiodła.
+     * @throws SQLException Jeśli wystąpi błąd SQL.
+     */
+    public static boolean dodajSegmentDoTrasy(Connection conn, int trasaId, int stacja1Id, int stacja2Id, int polaczeniaMiedzyStacjamiId, boolean zatrzymujeSie) throws SQLException {
+        String sql = "INSERT INTO stacje_na_trasie (trasa_id, stacja1_id, stacja2_id, polaczenia_miedzy_stacjami_id, zatrumujesia) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, trasaId);
+            pstmt.setInt(2, stacja1Id);
+            pstmt.setInt(3, stacja2Id);
+            pstmt.setInt(4, polaczeniaMiedzyStacjamiId);
+            pstmt.setBoolean(5, zatrzymujeSie);
+
+            return pstmt.executeUpdate() > 0;
+        }
+    }
 }

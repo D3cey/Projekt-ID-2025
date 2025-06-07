@@ -37,6 +37,7 @@
                 <Button fx:id="btnShowAddStationDialog" text="Dodaj Nową Stację..." maxWidth="Infinity"/>
                 <Button fx:id="btnShowAddConnectionDialog" text="Dodaj Nowe Połączenie..." maxWidth="Infinity"/>
                 <Button fx:id="btnShowAddTrasaDialog" text="Dodaj Nową Trasę..." maxWidth="Infinity"/>
+                <Button fx:id="btnShowEditTrasaDialog" text="Edycja Trasy..." maxWidth="Infinity"/>
                 <Button fx:id="btnShowDeleteStationDialog" text="Usuń Stację..." maxWidth="Infinity"
                         style="-fx-text-fill: red;"/>
             </VBox>
