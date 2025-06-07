@@ -9,7 +9,7 @@ import java.util.List;
 public class Trasa {
     private int id;
     private int poczatkowaStacjaId;
-    private String nazwaStacjiPoczatkowej; // Opcjonalnie, dla lepszego wyświetlania
+    private String nazwaStacjiPoczatkowej;
 
     public Trasa(int id, int poczatkowaStacjaId, String nazwaStacjiPoczatkowej) {
         this.id = id;
@@ -27,7 +27,6 @@ public class Trasa {
 
     @Override
     public String toString() {
-        // To będzie wyświetlane w ComboBox
         return "Trasa ID: " + id + " (z: " + nazwaStacjiPoczatkowej + ")";
     }
 
@@ -38,7 +37,6 @@ public class Trasa {
      */
     public static List<Trasa> pobierzWszystkie() {
         List<Trasa> trasy = new ArrayList<>();
-        // Używamy JOIN, aby od razu pobrać nazwę stacji początkowej
         String sql = "SELECT t.id, t.poczatkowa_stacja_id, s.nazwa AS nazwa_stacji " +
                 "FROM trasa t JOIN stacje s ON t.poczatkowa_stacja_id = s.id " +
                 "ORDER BY t.id";

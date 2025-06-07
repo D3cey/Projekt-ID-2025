@@ -57,10 +57,6 @@ public class Main extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
         Parent root = loader.load();
 
-        // Opcjonalnie: Przekaż zalogowanego użytkownika do MainController, jeśli jest potrzebny
-        // MainController mainController = loader.getController();
-        // mainController.setLoggedInUser(CurrentUserSession.getLoggedInUser()); // Musiałbyś dodać taką metodę w MainController
-
         Scene scene = new Scene(root);
         scene.getStylesheets().add(getClass().getResource("/app.css").toExternalForm());
         primaryStage.setTitle("Pociągi – Mapa"); // Tytuł głównego okna

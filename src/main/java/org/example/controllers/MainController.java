@@ -8,7 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox; // Dodany import dla VBox
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -16,8 +16,9 @@ import org.example.model.Polaczenie;
 import org.example.model.PolaczeniePociagowe;
 import org.example.model.Stacja;
 import org.example.model.Trasa;
-import org.example.util.CurrentUserSession; // Upewnij się, że ta klasa i pakiet są poprawne
+import org.example.util.CurrentUserSession;
 
+import java.util.stream.Collectors;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,9 @@ public class MainController {
     private final List<CoordinateLine> allLines = new ArrayList<>();
     private final List<CoordinateLine> redLines = new ArrayList<>();
 
+    private List<Stacja> wszystkieStacjeZBazy;
+    private List<Polaczenie> wszystkiePolaczeniaZBazy;
+
     @FXML
     public void initialize() {
         mapView = new MapView();
@@ -61,13 +65,22 @@ public class MainController {
         mapView.prefHeightProperty().bind(mapContainer.heightProperty());
         mapContainer.getChildren().add(mapView);
 
+        this.wszystkieStacjeZBazy = Stacja.pobierzWszystkie();
+        this.wszystkiePolaczeniaZBazy = Polaczenie.pobierzWszystkie();
+
         mapView.initializedProperty().addListener((obs, oldReady, ready) -> {
             if (ready) {
                 mapView.setMapType(MapType.OSM);
-                mapView.setCenter(new Coordinate(52.2297, 21.0118)); // Centrum na Warszawę
-                mapView.setZoom(6);
-                refreshStationData();
-                loadConnections();
+                mapView.setCenter(new Coordinate(52.2297, 21.0118));
+                mapView.setZoom(7);
+
+
+                aktualizujWyswietlanieMapy();
+
+
+                mapView.zoomProperty().addListener((observable, oldZoom, newZoom) -> {
+                    aktualizujWyswietlanieMapy();
+                });
             }
         });
 
@@ -106,25 +119,84 @@ public class MainController {
         }
     }
 
-    public void refreshStationData() {
-        List<Stacja> stacje = Stacja.pobierzWszystkie();
+    private void aktualizujWyswietlanieMapy() {
+        double aktualnyZoom = mapView.getZoom();
+        double progPowierzchni = obliczProgPowierzchni(aktualnyZoom);
 
-        if (mapView != null && mapView.getInitialized()) {
-            allMarkers.forEach(mapView::removeMarker);
-            allMarkers.clear();
 
-            for (Stacja s : stacje) {
-                Marker m = Marker.createProvided(Marker.Provided.BLUE)
-                        .setPosition(coord(s))
-                        .setVisible(true);
+        List<Stacja> stacjeDoWyswietlenia = wszystkieStacjeZBazy.stream()
+                .filter(stacja -> stacja.getPowierzchniaMiasta() >= progPowierzchni)
+                .collect(Collectors.toList());
 
-                m.attachLabel(new MapLabel(s.getNazwa(), 10, -10)
-                        .setCssClass("map-label-station")
-                        .setVisible(true));
-                mapView.addMarker(m);
-                allMarkers.add(m);
+
+        allMarkers.forEach(mapView::removeMarker);
+        allMarkers.clear();
+        for (Stacja s : stacjeDoWyswietlenia) {
+            Marker m = Marker.createProvided(Marker.Provided.BLUE)
+                    .setPosition(coord(s))
+                    .setVisible(true)
+                    .attachLabel(new MapLabel(s.getNazwa(), 10, -10).setCssClass("map-label-station"));
+            mapView.addMarker(m);
+            allMarkers.add(m);
+        }
+
+
+        allLines.forEach(mapView::removeCoordinateLine);
+        allLines.clear();
+
+        rysujPolaczenia(stacjeDoWyswietlenia);
+    }
+
+    /**
+     * Oblicza próg powierzchni miasta, powyżej którego stacje będą widoczne.
+     *
+     * @param zoom aktualny poziom przybliżenia mapy.
+     * @return Minimalna powierzchnia miasta, aby stacja była widoczna.
+     */
+    private double obliczProgPowierzchni(double zoom) {
+
+        if (zoom < 8) {
+            return 300.0;
+        } else if (zoom < 9) {
+            return 100.0;
+        } else if (zoom < 10) {
+            return 50.0;
+        } else if (zoom < 12) {
+            return 10.0;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Rysuje szare linie połączeń tylko między stacjami, które są aktualnie widoczne.
+     *
+     * @param widoczneStacje Lista stacji, które spełniają kryteria widoczności.
+     */
+    private void rysujPolaczenia(List<Stacja> widoczneStacje) {
+        List<Integer> widoczneStacjeIds = widoczneStacje.stream()
+                .map(Stacja::getId)
+                .collect(Collectors.toList());
+
+        for (Polaczenie p : wszystkiePolaczeniaZBazy) {
+            if (widoczneStacjeIds.contains(p.getStacja1Id()) && widoczneStacjeIds.contains(p.getStacja2Id())) {
+                Stacja s1 = byId(widoczneStacje, p.getStacja1Id());
+                Stacja s2 = byId(widoczneStacje, p.getStacja2Id());
+                if (s1 != null && s2 != null) {
+                    CoordinateLine cl = new CoordinateLine(coord(s1), coord(s2))
+                            .setColor(Color.web("#444444")).setWidth(3).setVisible(true);
+                    mapView.addCoordinateLine(cl);
+                    allLines.add(cl);
+                }
             }
         }
+    }
+
+    public void refreshStationData() {
+        this.wszystkieStacjeZBazy = Stacja.pobierzWszystkie();
+        this.wszystkiePolaczeniaZBazy = Polaczenie.pobierzWszystkie();
+
+        aktualizujWyswietlanieMapy();
     }
 
     private void showEdytujTraseDialog() {
@@ -140,14 +212,9 @@ public class MainController {
 
             EdytujTraseDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setTrasy(Trasa.pobierzWszystkie()); // Przekaż listę tras do dialogu
+            controller.setTrasy(Trasa.pobierzWszystkie());
 
             dialogStage.showAndWait();
-
-            // Po zamknięciu dialogu nie ma potrzeby wykonywać dodatkowych akcji odświeżających w MainController,
-            // ponieważ zmiany dotyczą danych, które nie są bezpośrednio wyświetlane w głównym oknie.
-            // Zmiany będą widoczne przy następnym wyszukiwaniu trasy lub w innych funkcjach,
-            // które będą odczytywać te dane.
 
         } catch (Exception e) {
             e.printStackTrace();

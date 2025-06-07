@@ -55,15 +55,12 @@ public class User {
                     Integer klientId = rs.getObject("klient_id") != null ? rs.getInt("klient_id") : null;
 
                     if (hashedPasswordFromInput.equals(dbHashedPassword)) {
-                        // Hasła się zgadzają
                         return new User(login, isAdmin, klientId);
                     } else {
-                        // Hasło nie pasuje
                         System.out.println("Logowanie nieudane: Nieprawidłowe hasło dla użytkownika " + login);
                         return null;
                     }
                 } else {
-                    // Użytkownik nie istnieje
                     System.out.println("Logowanie nieudane: Użytkownik " + login + " nie istnieje.");
                     return null;
                 }

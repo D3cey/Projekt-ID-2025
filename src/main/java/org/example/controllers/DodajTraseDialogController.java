@@ -33,7 +33,7 @@ public class DodajTraseDialogController {
     @FXML
     private Button btnDodajOdcinek;
     @FXML
-    private TableView<StacjaNaTrasieWrapper> tabelaStacjiNaTrasie; // Zmieniono z ListView
+    private TableView<StacjaNaTrasieWrapper> tabelaStacjiNaTrasie;
     @FXML
     private TableColumn<StacjaNaTrasieWrapper, String> kolumnaNazwaStacji;
     @FXML
@@ -52,7 +52,6 @@ public class DodajTraseDialogController {
     private ObservableList<StacjaNaTrasieWrapper> stacjeNaTrasieDoTabeli = FXCollections.observableArrayList();
     private List<Segment> segmentyDoZapisu = new ArrayList<>();
 
-    // Klasa wewnętrzna do przechowywania danych o segmencie przed zapisem
     private static class Segment {
         int stacja1Id;
         int stacja2Id;
@@ -80,7 +79,6 @@ public class DodajTraseDialogController {
 
     @FXML
     private void initialize() {
-        // Konfiguracja TableView
         tabelaStacjiNaTrasie.setItems(stacjeNaTrasieDoTabeli);
         kolumnaNazwaStacji.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStacja().getNazwa())
@@ -93,12 +91,12 @@ public class DodajTraseDialogController {
         comboPierwszaStacja.setOnAction(event -> {
             Stacja wybranaStacja = comboPierwszaStacja.getValue();
             if (wybranaStacja != null && stacjeNaTrasieDoTabeli.isEmpty()) {
-                stacjeNaTrasieDoTabeli.add(new StacjaNaTrasieWrapper(wybranaStacja, 0, true)); // Domyślnie pierwsza stacja ma postój
+                stacjeNaTrasieDoTabeli.add(new StacjaNaTrasieWrapper(wybranaStacja, 0, true));
                 lblStatusTrasy.setText("Wybrano stację początkową: " + wybranaStacja.getNazwa());
                 aktualizujDostepneNastepneStacje(wybranaStacja);
                 comboPierwszaStacja.setDisable(true);
                 btnDodajOdcinek.setDisable(comboNastepnaStacja.getItems().isEmpty());
-                btnZapiszTrase.setDisable(true); // Zapis możliwy dopiero po dodaniu segmentu
+                btnZapiszTrase.setDisable(true);
             }
         });
     }
@@ -118,10 +116,10 @@ public class DodajTraseDialogController {
         Stacja nastepnaStacja = wybranyWrapper.getStacja();
         int polaczenieId = wybranyWrapper.getPolaczenieId();
 
-        // Zapisz segment do późniejszego wstawienia do bazy
+
         segmentyDoZapisu.add(new Segment(ostatniaStacja.getId(), nastepnaStacja.getId(), polaczenieId));
-        // Dodaj nową stację do tabeli w UI
-        stacjeNaTrasieDoTabeli.add(new StacjaNaTrasieWrapper(nastepnaStacja, 0, true)); // Domyślnie każda następna stacja ma postój
+
+        stacjeNaTrasieDoTabeli.add(new StacjaNaTrasieWrapper(nastepnaStacja, 0, true));
 
         comboNastepnaStacja.setValue(null);
         aktualizujDostepneNastepneStacje(nastepnaStacja);
@@ -142,19 +140,18 @@ public class DodajTraseDialogController {
         Connection conn = null;
         try {
             conn = DbUtil.getConnection();
-            conn.setAutoCommit(false); // Rozpocznij transakcję
+            conn.setAutoCommit(false);
 
-            // 1. Dodaj wpis do tabeli `trasa` i pobierz ID
+
             int nowaTrasaId = Trasa.dodajTrase(conn, poczatkowaStacjaId);
 
-            // 2. Dodaj wszystkie segmenty do `stacje_na_trasie`
+
             for (Segment segment : segmentyDoZapisu) {
-                // Znajdź status "zatrzymujeSie" dla stacji początkowej tego segmentu
                 boolean zatrzymujeSie = stacjeNaTrasieDoTabeli.stream()
                         .filter(s -> s.getStacja().getId() == segment.stacja1Id)
                         .findFirst()
                         .map(StacjaNaTrasieWrapper::czySieZatrzymuje)
-                        .orElse(true); // Domyślnie true, jeśli nie znajdzie (nie powinno się zdarzyć)
+                        .orElse(true);
 
                 boolean segmentDodany = Stacja.dodajSegmentDoTrasy(
                         conn, nowaTrasaId, segment.stacja1Id, segment.stacja2Id, segment.polaczenieId, zatrzymujeSie
@@ -164,7 +161,7 @@ public class DodajTraseDialogController {
                 }
             }
 
-            conn.commit(); // Zatwierdź transakcję
+            conn.commit();
             trasaDodana = true;
             lblStatusTrasy.setText("Trasa została pomyślnie zapisana! ID Trasy: " + nowaTrasaId);
             lblStatusTrasy.setTextFill(Color.GREEN);
@@ -194,9 +191,6 @@ public class DodajTraseDialogController {
         }
     }
 
-    // Pozostałe metody (aktualizujDostepneNastepneStacje, znajdzStacjePoId, handleAnuluj)
-    // pozostają takie same jak w poprzednich krokach.
-    // ...
     private void aktualizujDostepneNastepneStacje(Stacja ostatniaStacjaNaTrasie) {
         if (ostatniaStacjaNaTrasie == null) {
             comboNastepnaStacja.setItems(FXCollections.emptyObservableList());

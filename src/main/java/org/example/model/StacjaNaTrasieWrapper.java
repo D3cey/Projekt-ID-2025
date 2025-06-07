@@ -21,17 +21,14 @@ public class StacjaNaTrasieWrapper {
         return trasaId;
     }
 
-    // Zwraca właściwość JavaFX, do której można bindować CheckBox
     public SimpleBooleanProperty zatrzymujeSieProperty() {
         return zatrzymujeSie;
     }
 
-    // Standardowy getter
     public boolean czySieZatrzymuje() {
         return zatrzymujeSie.get();
     }
 
-    // Standardowy setter
     public void setZatrzymujeSie(boolean value) {
         this.zatrzymujeSie.set(value);
     }

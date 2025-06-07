@@ -16,13 +16,20 @@ import java.util.List;
 
 public class EdytujTraseDialogController {
 
-    @FXML private ComboBox<Trasa> comboWybierzTrase;
-    @FXML private TableView<StacjaNaTrasieWrapper> tabelaStacji;
-    @FXML private TableColumn<StacjaNaTrasieWrapper, String> kolumnaNazwaStacji;
-    @FXML private TableColumn<StacjaNaTrasieWrapper, Boolean> kolumnaZatrzymujeSie;
-    @FXML private Label lblStatus;
-    @FXML private Button btnZapiszZmiany;
-    @FXML private Button btnAnuluj;
+    @FXML
+    private ComboBox<Trasa> comboWybierzTrase;
+    @FXML
+    private TableView<StacjaNaTrasieWrapper> tabelaStacji;
+    @FXML
+    private TableColumn<StacjaNaTrasieWrapper, String> kolumnaNazwaStacji;
+    @FXML
+    private TableColumn<StacjaNaTrasieWrapper, Boolean> kolumnaZatrzymujeSie;
+    @FXML
+    private Label lblStatus;
+    @FXML
+    private Button btnZapiszZmiany;
+    @FXML
+    private Button btnAnuluj;
 
     private Stage dialogStage;
     private ObservableList<StacjaNaTrasieWrapper> stacjeNaWybranejTrasie = FXCollections.observableArrayList();
@@ -37,24 +44,20 @@ public class EdytujTraseDialogController {
 
     @FXML
     private void initialize() {
-        // Skonfiguruj kolumny tabeli
-        // Kolumna z nazwą stacji (używa gettera z obiektu Stacja wewnątrz wrappera)
         kolumnaNazwaStacji.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStacja().getNazwa())
         );
 
-        // Kolumna z CheckBoxem do edycji statusu postoju
         kolumnaZatrzymujeSie.setCellValueFactory(cellData -> cellData.getValue().zatrzymujeSieProperty());
         kolumnaZatrzymujeSie.setCellFactory(CheckBoxTableCell.forTableColumn(kolumnaZatrzymujeSie));
         kolumnaZatrzymujeSie.setEditable(true);
         tabelaStacji.setEditable(true);
 
-        // Ustawienie listenera na ComboBox, który załaduje stacje po wybraniu trasy
         comboWybierzTrase.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
                     if (newValue != null) {
                         zaladujStacjeDlaTrasy(newValue.getId());
-                        btnZapiszZmiany.setDisable(false); // Włącz przycisk zapisu
+                        btnZapiszZmiany.setDisable(false);
                     }
                 }
         );
@@ -84,7 +87,6 @@ public class EdytujTraseDialogController {
         if (allSuccess) {
             lblStatus.setText("Zmiany zostały pomyślnie zapisane!");
             lblStatus.setTextFill(Color.GREEN);
-            // Można zamknąć dialog po sukcesie
             // dialogStage.close();
         } else {
             lblStatus.setText("Wystąpił błąd podczas zapisywania zmian. Sprawdź logi.");

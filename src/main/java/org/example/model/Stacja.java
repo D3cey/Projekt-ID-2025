@@ -12,12 +12,14 @@ public class Stacja {
     private String nazwa;
     private double szerokoscGeograficzna;
     private double dlugoscGeograficzna;
+    private double powierzchniaMiasta;
 
-    public Stacja(int id, String nazwa, double szerokoscGeograficzna, double dlugoscGeograficzna) {
+    public Stacja(int id, String nazwa, double szerokoscGeograficzna, double dlugoscGeograficzna, double powierzchniaMiasta) {
         this.id = id;
         this.nazwa = nazwa;
         this.szerokoscGeograficzna = szerokoscGeograficzna;
         this.dlugoscGeograficzna = dlugoscGeograficzna;
+        this.powierzchniaMiasta = powierzchniaMiasta;
     }
 
     public int getId() {
@@ -34,6 +36,10 @@ public class Stacja {
 
     public double getDlugoscGeograficzna() {
         return dlugoscGeograficzna;
+    }
+
+    public double getPowierzchniaMiasta() {
+        return powierzchniaMiasta;
     }
 
     @Override
@@ -55,29 +61,36 @@ public class Stacja {
     }
 
     /**
-     * Pobiera wszystkie stacje z bazy danych.
+     * Pobiera wszystkie stacje z bazy danych wraz z powierzchnią miasta, w którym się znajdują.
      *
-     * @return Lista obiektów Stacja.
+     * @return Lista wszystkich obiektów Stacja.
      */
     public static List<Stacja> pobierzWszystkie() {
-        List<Stacja> listaStacji = new ArrayList<>(); // Zmieniono nazwę zmiennej
-        String sql = "SELECT id, nazwa, szerokosc AS szerokoscGeograficzna, dlugosc AS dlugoscGeograficzna FROM stacje ORDER BY nazwa";
+        List<Stacja> lista = new ArrayList<>();
+
+        String sql = "SELECT s.id, s.nazwa, s.szerokosc, s.dlugosc, COALESCE(m.powierzchnia, 0) AS powierzchnia_miasta " +
+                "FROM stacje s " +
+                "LEFT JOIN miasta m ON s.miasto = m.id " +
+                "ORDER BY s.nazwa";
+
         try (Connection conn = DbUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
+
             while (rs.next()) {
-                listaStacji.add(new Stacja(
+                lista.add(new Stacja(
                         rs.getInt("id"),
                         rs.getString("nazwa"),
-                        rs.getDouble("szerokoscGeograficzna"),
-                        rs.getDouble("dlugoscGeograficzna")
+                        rs.getDouble("szerokosc"),
+                        rs.getDouble("dlugosc"),
+                        rs.getDouble("powierzchnia_miasta")
                 ));
             }
         } catch (SQLException e) {
-            System.err.println("Wystąpił błąd podczas pobierania stacji: " + e.getMessage());
+            System.err.println("Błąd podczas pobierania Stacji: " + e.getMessage());
             e.printStackTrace();
         }
-        return listaStacji;
+        return lista;
     }
 
     /**
@@ -139,12 +152,12 @@ public class Stacja {
      */
     public static List<StacjaNaTrasieWrapper> pobierzStacjeDlaTrasy(int trasaId) {
         List<StacjaNaTrasieWrapper> stacjeNaTrasie = new ArrayList<>();
-        // Zapytanie łączące stacje_na_trasie ze stacjami, aby uzyskać pełne dane
+
         String sql = "SELECT s.id, s.nazwa, s.szerokosc, s.dlugosc, s.miasto, snt.zatrumujesia " +
                 "FROM stacje_na_trasie snt " +
                 "JOIN stacje s ON snt.stacja1_id = s.id " +
                 "WHERE snt.trasa_id = ? " +
-                "ORDER BY snt.stacja1_id"; // Sortowanie jest ważne, jeśli kolejność ma znaczenie
+                "ORDER BY snt.stacja1_id";
 
         try (Connection conn = DbUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -157,8 +170,8 @@ public class Stacja {
                         rs.getInt("id"),
                         rs.getString("nazwa"),
                         rs.getDouble("szerokosc"),
-                        rs.getDouble("dlugosc")
-                        // rs.getInt("miasto") // Jeśli potrzebujesz
+                        rs.getDouble("dlugosc"),
+                        rs.getInt("miasto")
                 );
                 stacjeNaTrasie.add(new StacjaNaTrasieWrapper(
                         stacja,
