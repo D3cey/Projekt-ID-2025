@@ -17,6 +17,7 @@ import org.example.model.PolaczeniePociagowe;
 import org.example.model.Stacja;
 import org.example.model.Trasa;
 import org.example.util.CurrentUserSession;
+import org.example.model.Miasto;
 
 import java.util.stream.Collectors;
 import java.io.IOException;
@@ -53,6 +54,9 @@ public class MainController {
 
     private List<Stacja> wszystkieStacjeZBazy;
     private List<Polaczenie> wszystkiePolaczeniaZBazy;
+    private List<Miasto> wszystkieMiastaZBazy;
+
+    private final double ZOOM_PRZELACZENIA_MIASTO_STACJA = 11.0;
 
     @FXML
     public void initialize() {
@@ -67,6 +71,7 @@ public class MainController {
 
         this.wszystkieStacjeZBazy = Stacja.pobierzWszystkie();
         this.wszystkiePolaczeniaZBazy = Polaczenie.pobierzWszystkie();
+        this.wszystkieMiastaZBazy = Miasto.pobierzWszystkie();
 
         mapView.initializedProperty().addListener((obs, oldReady, ready) -> {
             if (ready) {
@@ -74,13 +79,9 @@ public class MainController {
                 mapView.setCenter(new Coordinate(52.2297, 21.0118));
                 mapView.setZoom(7);
 
-
                 aktualizujWyswietlanieMapy();
 
-
-                mapView.zoomProperty().addListener((observable, oldZoom, newZoom) -> {
-                    aktualizujWyswietlanieMapy();
-                });
+                mapView.zoomProperty().addListener((observable) -> aktualizujWyswietlanieMapy());
             }
         });
 
@@ -121,52 +122,68 @@ public class MainController {
 
     private void aktualizujWyswietlanieMapy() {
         double aktualnyZoom = mapView.getZoom();
-        double progPowierzchni = obliczProgPowierzchni(aktualnyZoom);
 
+        // Wyczyść wszystkie poprzednio wyświetlone markery i linie
+        czyscMape();
 
-        List<Stacja> stacjeDoWyswietlenia = wszystkieStacjeZBazy.stream()
-                .filter(stacja -> stacja.getPowierzchniaMiasta() >= progPowierzchni)
-                .collect(Collectors.toList());
+        if (aktualnyZoom < ZOOM_PRZELACZENIA_MIASTO_STACJA) {
+            // WIDOK MIAST (mapa oddalona)
+            wyswietlajMiasta(aktualnyZoom);
+        } else {
+            // WIDOK STACJI (mapa przybliżona)
+            wyswietlajStacje();
+        }
+    }
 
-
+    private void czyscMape() {
         allMarkers.forEach(mapView::removeMarker);
         allMarkers.clear();
-        for (Stacja s : stacjeDoWyswietlenia) {
-            Marker m = Marker.createProvided(Marker.Provided.BLUE)
-                    .setPosition(coord(s))
+        allLines.forEach(mapView::removeCoordinateLine);
+        allLines.clear();
+        // Czerwone linie trasy są czyszczone osobno w logice znajdowania trasy
+    }
+
+    private void wyswietlajMiasta(double aktualnyZoom) {
+        double progPowierzchni = obliczProgPowierzchni(aktualnyZoom);
+
+        List<Miasto> miastaDoWyswietlenia = wszystkieMiastaZBazy.stream()
+                .filter(miasto -> miasto.getPowierzchnia() >= progPowierzchni)
+                .collect(Collectors.toList());
+
+        for (Miasto miasto : miastaDoWyswietlenia) {
+            Marker m = Marker.createProvided(Marker.Provided.ORANGE) // Inny kolor dla miast
+                    .setPosition(new Coordinate(miasto.getSzerokosc(), miasto.getDlugosc()))
                     .setVisible(true)
-                    .attachLabel(new MapLabel(s.getNazwa(), 10, -10).setCssClass("map-label-station"));
+                    .attachLabel(new MapLabel(miasto.getNazwa(), 12, -12).setCssClass("map-label-city"));
+            mapView.addMarker(m);
+            allMarkers.add(m);
+        }
+        // W widoku miast nie rysujemy połączeń, aby mapa była bardziej czytelna.
+    }
+
+    private void wyswietlajStacje() {
+        // Przy dużym przybliżeniu pokazujemy wszystkie stacje
+        for (Stacja stacja : wszystkieStacjeZBazy) {
+            Marker m = Marker.createProvided(Marker.Provided.BLUE)
+                    .setPosition(coord(stacja))
+                    .setVisible(true)
+                    .attachLabel(new MapLabel(stacja.getNazwa(), 10, -10).setCssClass("map-label-station"));
             mapView.addMarker(m);
             allMarkers.add(m);
         }
 
-
-        allLines.forEach(mapView::removeCoordinateLine);
-        allLines.clear();
-
-        rysujPolaczenia(stacjeDoWyswietlenia);
+        // Rysuj połączenia między wszystkimi stacjami
+        rysujPolaczenia(wszystkieStacjeZBazy);
     }
 
-    /**
-     * Oblicza próg powierzchni miasta, powyżej którego stacje będą widoczne.
-     *
-     * @param zoom aktualny poziom przybliżenia mapy.
-     * @return Minimalna powierzchnia miasta, aby stacja była widoczna.
-     */
     private double obliczProgPowierzchni(double zoom) {
-
-        if (zoom < 8) {
-            return 300.0;
-        } else if (zoom < 9) {
-            return 100.0;
-        } else if (zoom < 10) {
-            return 50.0;
-        } else if (zoom < 12) {
-            return 10.0;
-        } else {
-            return 0;
-        }
+        if (zoom < 8) return 300.0;
+        if (zoom < 9) return 100.0;
+        if (zoom < 10) return 50.0;
+        if (zoom < ZOOM_PRZELACZENIA_MIASTO_STACJA) return 10.0;
+        return 0;
     }
+
 
     /**
      * Rysuje szare linie połączeń tylko między stacjami, które są aktualnie widoczne.
