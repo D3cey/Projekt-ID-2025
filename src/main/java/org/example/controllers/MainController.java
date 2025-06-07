@@ -123,14 +123,11 @@ public class MainController {
     private void aktualizujWyswietlanieMapy() {
         double aktualnyZoom = mapView.getZoom();
 
-        // Wyczyść wszystkie poprzednio wyświetlone markery i linie
         czyscMape();
 
         if (aktualnyZoom < ZOOM_PRZELACZENIA_MIASTO_STACJA) {
-            // WIDOK MIAST (mapa oddalona)
             wyswietlajMiasta(aktualnyZoom);
         } else {
-            // WIDOK STACJI (mapa przybliżona)
             wyswietlajStacje();
         }
     }
@@ -140,7 +137,6 @@ public class MainController {
         allMarkers.clear();
         allLines.forEach(mapView::removeCoordinateLine);
         allLines.clear();
-        // Czerwone linie trasy są czyszczone osobno w logice znajdowania trasy
     }
 
     private void wyswietlajMiasta(double aktualnyZoom) {
@@ -151,18 +147,17 @@ public class MainController {
                 .collect(Collectors.toList());
 
         for (Miasto miasto : miastaDoWyswietlenia) {
-            Marker m = Marker.createProvided(Marker.Provided.ORANGE) // Inny kolor dla miast
+            Marker m = Marker.createProvided(Marker.Provided.ORANGE)
                     .setPosition(new Coordinate(miasto.getSzerokosc(), miasto.getDlugosc()))
                     .setVisible(true)
                     .attachLabel(new MapLabel(miasto.getNazwa(), 12, -12).setCssClass("map-label-city"));
             mapView.addMarker(m);
             allMarkers.add(m);
         }
-        // W widoku miast nie rysujemy połączeń, aby mapa była bardziej czytelna.
     }
 
     private void wyswietlajStacje() {
-        // Przy dużym przybliżeniu pokazujemy wszystkie stacje
+
         for (Stacja stacja : wszystkieStacjeZBazy) {
             Marker m = Marker.createProvided(Marker.Provided.BLUE)
                     .setPosition(coord(stacja))
@@ -172,7 +167,7 @@ public class MainController {
             allMarkers.add(m);
         }
 
-        // Rysuj połączenia między wszystkimi stacjami
+
         rysujPolaczenia(wszystkieStacjeZBazy);
     }
 

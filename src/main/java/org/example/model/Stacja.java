@@ -159,7 +159,6 @@ public class Stacja {
                 }
             }
 
-            // Krok 3: Zbuduj uporządkowaną listę ID stacji (logika bez zmian)
             List<Integer> uporzadkowaneIdStacji = new ArrayList<>();
             Map<Integer, Boolean> statusyZatrzyman = new HashMap<>();
             if (poczatkowaStacjaId != -1) {
@@ -181,7 +180,6 @@ public class Stacja {
                 return uporzadkowaneStacje;
             }
 
-            // Krok 4: Pobierz wszystkie potrzebne obiekty Stacja
             Map<Integer, Stacja> stacjeMap = new HashMap<>();
             String inClause = uporzadkowaneIdStacji.stream().map(String::valueOf).collect(Collectors.joining(","));
             String sqlStacje = "SELECT id, nazwa, szerokosc, dlugosc, miasto FROM stacje WHERE id IN (" + inClause + ")";
@@ -239,9 +237,6 @@ public class Stacja {
         }
     }
 
-    /**
-     * Dodaje pojedynczy segment do trasy w ramach istniejącej transakcji.
-     */
     public static boolean dodajSegmentDoTrasy(Connection conn, int trasaId, int stacja1Id, int stacja2Id, int polaczeniaMiedzyStacjamiId, boolean zatrzymujeSie) throws SQLException {
         String sql = "INSERT INTO stacje_na_trasie (trasa_id, stacja1_id, stacja2_id, polaczenia_miedzy_stacjami_id, zatrumujesia) VALUES (?, ?, ?, ?, ?)";
 
