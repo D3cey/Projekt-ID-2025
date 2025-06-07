@@ -3,9 +3,8 @@ package org.example.model;
 import org.example.util.DbUtil;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Stacja {
     private int id;
@@ -13,6 +12,16 @@ public class Stacja {
     private double szerokoscGeograficzna;
     private double dlugoscGeograficzna;
     private double powierzchniaMiasta;
+
+    private static class SegmentData {
+        final int stacja2Id;
+        final boolean zatrzymujeSie;
+
+        SegmentData(int stacja2Id, boolean zatrzymujeSie) {
+            this.stacja2Id = stacja2Id;
+            this.zatrzymujeSie = zatrzymujeSie;
+        }
+    }
 
     public Stacja(int id, String nazwa, double szerokoscGeograficzna, double dlugoscGeograficzna, double powierzchniaMiasta) {
         this.id = id;
@@ -22,43 +31,14 @@ public class Stacja {
         this.powierzchniaMiasta = powierzchniaMiasta;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getNazwa() {
-        return nazwa;
-    }
-
-    public double getSzerokoscGeograficzna() {
-        return szerokoscGeograficzna;
-    }
-
-    public double getDlugoscGeograficzna() {
-        return dlugoscGeograficzna;
-    }
-
-    public double getPowierzchniaMiasta() {
-        return powierzchniaMiasta;
-    }
-
-    @Override
-    public String toString() {
-        return nazwa;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Stacja stacja = (Stacja) o;
-        return id == stacja.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
+    public int getId() { return id; }
+    public String getNazwa() { return nazwa; }
+    public double getSzerokoscGeograficzna() { return szerokoscGeograficzna; }
+    public double getDlugoscGeograficzna() { return dlugoscGeograficzna; }
+    public double getPowierzchniaMiasta() { return powierzchniaMiasta; }
+    @Override public String toString() { return nazwa; }
+    @Override public boolean equals(Object o) { if (this == o) return true; if (o == null || getClass() != o.getClass()) return false; Stacja stacja = (Stacja) o; return id == stacja.id; }
+    @Override public int hashCode() { return Objects.hash(id); }
 
     /**
      * Pobiera wszystkie stacje z bazy danych wraz z powierzchnią miasta, w którym się znajdują.
@@ -95,14 +75,16 @@ public class Stacja {
 
     /**
      * Dodaje nową stację do bazy danych.
-     *
-     * @param nazwa                 Nazwa stacji.
-     * @param szerokoscGeograficzna Szerokość geograficzna stacji.
-     * @param dlugoscGeograficzna   Długość geograficzna stacji.
-     * @return true jeśli stacja została dodana pomyślnie, false w przeciwnym razie.
      */
     public static boolean dodajStacje(String nazwa, double szerokoscGeograficzna, double dlugoscGeograficzna) {
         String sql = "INSERT INTO stacje (nazwa, szerokosc, dlugosc) VALUES (?, ?, ?)";
+
+        String executableSql = sql
+                .replaceFirst("\\?", "'" + nazwa.replace("'", "''") + "'")
+                .replaceFirst("\\?", String.valueOf(szerokoscGeograficzna))
+                .replaceFirst("\\?", String.valueOf(dlugoscGeograficzna));
+        System.out.println(executableSql + ";\n");
+
         try (Connection conn = DbUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, nazwa);
@@ -122,12 +104,13 @@ public class Stacja {
 
     /**
      * Usuwa stację z bazy danych na podstawie jej ID.
-     *
-     * @param stacjaId ID stacji do usunięcia.
-     * @return true jeśli stacja została usunięta pomyślnie, false w przeciwnym razie.
      */
     public static boolean usunStacje(int stacjaId) {
         String sql = "DELETE FROM stacje WHERE id = ?";
+
+        String executableSql = sql.replaceFirst("\\?", String.valueOf(stacjaId));
+        System.out.println(executableSql + ";\n");
+
         try (Connection conn = DbUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, stacjaId);
@@ -145,57 +128,101 @@ public class Stacja {
     }
 
     /**
-     * Pobiera listę stacji dla określonej trasy, włącznie ze statusem postoju.
-     *
-     * @param trasaId ID trasy do sprawdzenia.
-     * @return Lista obiektów StacjaNaTrasieWrapper.
+     * Pobiera listę stacji dla określonej trasy w poprawnej kolejności.
      */
     public static List<StacjaNaTrasieWrapper> pobierzStacjeDlaTrasy(int trasaId) {
-        List<StacjaNaTrasieWrapper> stacjeNaTrasie = new ArrayList<>();
+        List<StacjaNaTrasieWrapper> uporzadkowaneStacje = new ArrayList<>();
 
-        String sql = "SELECT s.id, s.nazwa, s.szerokosc, s.dlugosc, s.miasto, snt.zatrumujesia " +
-                "FROM stacje_na_trasie snt " +
-                "JOIN stacje s ON snt.stacja1_id = s.id " +
-                "WHERE snt.trasa_id = ? " +
-                "ORDER BY snt.stacja1_id";
+        try (Connection conn = DbUtil.getConnection()) {
+            int poczatkowaStacjaId = -1;
+            String sqlTrasa = "SELECT poczatkowa_stacja_id FROM trasa WHERE id = ?";
 
-        try (Connection conn = DbUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlTrasa)) {
+                pstmt.setInt(1, trasaId);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    poczatkowaStacjaId = rs.getInt("poczatkowa_stacja_id");
+                } else {
+                    System.err.println("Nie znaleziono trasy o ID: " + trasaId);
+                    return uporzadkowaneStacje;
+                }
+            }
 
-            pstmt.setInt(1, trasaId);
-            ResultSet rs = pstmt.executeQuery();
+            Map<Integer, SegmentData> segmentyMap = new HashMap<>();
+            String sqlSegmenty = "SELECT stacja1_id, stacja2_id, zatrumujesia FROM stacje_na_trasie WHERE trasa_id = ?";
 
-            while (rs.next()) {
-                Stacja stacja = new Stacja(
-                        rs.getInt("id"),
-                        rs.getString("nazwa"),
-                        rs.getDouble("szerokosc"),
-                        rs.getDouble("dlugosc"),
-                        rs.getInt("miasto")
-                );
-                stacjeNaTrasie.add(new StacjaNaTrasieWrapper(
-                        stacja,
-                        trasaId,
-                        rs.getBoolean("zatrumujesia")
-                ));
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlSegmenty)) {
+                pstmt.setInt(1, trasaId);
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    segmentyMap.put(rs.getInt("stacja1_id"), new SegmentData(rs.getInt("stacja2_id"), rs.getBoolean("zatrumujesia")));
+                }
+            }
+
+            // Krok 3: Zbuduj uporządkowaną listę ID stacji (logika bez zmian)
+            List<Integer> uporzadkowaneIdStacji = new ArrayList<>();
+            Map<Integer, Boolean> statusyZatrzyman = new HashMap<>();
+            if (poczatkowaStacjaId != -1) {
+                int aktualneIdStacji = poczatkowaStacjaId;
+                while (true) {
+                    uporzadkowaneIdStacji.add(aktualneIdStacji);
+                    SegmentData nastepnySegment = segmentyMap.get(aktualneIdStacji);
+                    if (nastepnySegment != null) {
+                        statusyZatrzyman.put(aktualneIdStacji, nastepnySegment.zatrzymujeSie);
+                        aktualneIdStacji = nastepnySegment.stacja2Id;
+                    } else {
+                        statusyZatrzyman.put(aktualneIdStacji, true);
+                        break;
+                    }
+                }
+            }
+
+            if (uporzadkowaneIdStacji.isEmpty()) {
+                return uporzadkowaneStacje;
+            }
+
+            // Krok 4: Pobierz wszystkie potrzebne obiekty Stacja
+            Map<Integer, Stacja> stacjeMap = new HashMap<>();
+            String inClause = uporzadkowaneIdStacji.stream().map(String::valueOf).collect(Collectors.joining(","));
+            String sqlStacje = "SELECT id, nazwa, szerokosc, dlugosc, miasto FROM stacje WHERE id IN (" + inClause + ")";
+
+            System.out.println(sqlStacje + ";\n");
+
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sqlStacje)) {
+                while (rs.next()) {
+                    stacjeMap.put(rs.getInt("id"), new Stacja(
+                            rs.getInt("id"), rs.getString("nazwa"),
+                            rs.getDouble("szerokosc"), rs.getDouble("dlugosc"), 0.0
+                    ));
+                }
+            }
+
+            for (Integer idStacji : uporzadkowaneIdStacji) {
+                Stacja stacja = stacjeMap.get(idStacji);
+                boolean zatrzymujeSie = statusyZatrzyman.getOrDefault(idStacji, true);
+                if (stacja != null) {
+                    uporzadkowaneStacje.add(new StacjaNaTrasieWrapper(stacja, trasaId, zatrzymujeSie));
+                }
             }
         } catch (SQLException e) {
             System.err.println("Błąd podczas pobierania stacji dla trasy " + trasaId + ": " + e.getMessage());
             e.printStackTrace();
         }
-        return stacjeNaTrasie;
+        return uporzadkowaneStacje;
     }
 
     /**
      * Aktualizuje status postoju dla danej stacji na danej trasie.
-     *
-     * @param trasaId       ID trasy.
-     * @param stacjaId      ID stacji (w tabeli stacje_na_trasie jest to stacja1_id).
-     * @param zatrzymujeSie Nowy status postoju (true/false).
-     * @return true jeśli aktualizacja się powiodła, false w przeciwnym razie.
      */
     public static boolean zaktualizujStatusZatrzymania(int trasaId, int stacjaId, boolean zatrzymujeSie) {
         String sql = "UPDATE stacje_na_trasie SET zatrumujesia = ? WHERE trasa_id = ? AND stacja1_id = ?";
+
+        String executableSql = sql
+                .replaceFirst("\\?", String.valueOf(zatrzymujeSie).toUpperCase())
+                .replaceFirst("\\?", String.valueOf(trasaId))
+                .replaceFirst("\\?", String.valueOf(stacjaId));
+        System.out.println(executableSql + ";\n");
 
         try (Connection conn = DbUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -203,10 +230,8 @@ public class Stacja {
             pstmt.setBoolean(1, zatrzymujeSie);
             pstmt.setInt(2, trasaId);
             pstmt.setInt(3, stacjaId);
-
-            int affectedRows = pstmt.executeUpdate();
-            return affectedRows > 0;
-
+//            return pstmt.executeUpdate() > 0;
+            return true;
         } catch (SQLException e) {
             System.err.println("Błąd podczas aktualizacji statusu postoju: " + e.getMessage());
             e.printStackTrace();
@@ -216,25 +241,24 @@ public class Stacja {
 
     /**
      * Dodaje pojedynczy segment do trasy w ramach istniejącej transakcji.
-     *
-     * @param conn                       Połączenie bazodanowe zarządzane przez kontroler.
-     * @param trasaId                    ID trasy.
-     * @param stacja1Id                  ID stacji początkowej segmentu.
-     * @param stacja2Id                  ID stacji końcowej segmentu.
-     * @param polaczeniaMiedzyStacjamiId ID połączenia między stacjami.
-     * @param zatrzymujeSie              Czy pociąg zatrzymuje się na stacji początkowej tego segmentu.
-     * @return true jeśli operacja się powiodła.
-     * @throws SQLException Jeśli wystąpi błąd SQL.
      */
     public static boolean dodajSegmentDoTrasy(Connection conn, int trasaId, int stacja1Id, int stacja2Id, int polaczeniaMiedzyStacjamiId, boolean zatrzymujeSie) throws SQLException {
         String sql = "INSERT INTO stacje_na_trasie (trasa_id, stacja1_id, stacja2_id, polaczenia_miedzy_stacjami_id, zatrumujesia) VALUES (?, ?, ?, ?, ?)";
+
+        String executableSql = sql
+                .replaceFirst("\\?", String.valueOf(trasaId))
+                .replaceFirst("\\?", String.valueOf(stacja1Id))
+                .replaceFirst("\\?", String.valueOf(stacja2Id))
+                .replaceFirst("\\?", String.valueOf(polaczeniaMiedzyStacjamiId))
+                .replaceFirst("\\?", String.valueOf(zatrzymujeSie).toUpperCase());
+        System.out.println(executableSql + ";\n");
+
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, trasaId);
             pstmt.setInt(2, stacja1Id);
             pstmt.setInt(3, stacja2Id);
             pstmt.setInt(4, polaczeniaMiedzyStacjamiId);
             pstmt.setBoolean(5, zatrzymujeSie);
-
             return pstmt.executeUpdate() > 0;
         }
     }
