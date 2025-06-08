@@ -56,7 +56,7 @@ public class MainController {
     private List<Polaczenie> wszystkiePolaczeniaZBazy;
     private List<Miasto> wszystkieMiastaZBazy;
 
-    private final double ZOOM_PRZELACZENIA_MIASTO_STACJA = 11.0;
+    private final double ZOOM_PRZELACZENIA_MIASTO_STACJA = 1.0;
 
     @FXML
     public void initialize() {

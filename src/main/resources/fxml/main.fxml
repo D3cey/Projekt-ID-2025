@@ -30,6 +30,7 @@
             </padding>
             <Label text="Akcje" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
             <Button fx:id="btnShowFindRouteDialog" text="Znajdź trasę..." maxWidth="Infinity"/>
+            <Button fx:id="btnRefresh" text="Odśwież" maxWidth="Infinity"/>
             <VBox fx:id="adminControlsPane" spacing="8" alignment="TOP_CENTER" managed="false" visible="false">
                 <Separator style="-fx-padding: 10 0 0 0;"/>
                 <Label text="Zarządzaj Danymi (Admin)"
